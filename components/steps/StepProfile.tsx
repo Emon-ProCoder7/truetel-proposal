@@ -93,8 +93,7 @@ export default function StepProfile({ state, update }: Props) {
           />
           <p className="mt-2 text-xs text-ink-faint">
             NBN, landline and 1300 lines below get priced per site. Handsets stay a flat central-reception pool
-            (that's the real shape of TrueTel&apos;s 12-site college deal — one connection + number per site, a
-            small shared pool of reception handsets).
+            — one connection and number per site, plus a small shared pool of reception handsets.
           </p>
         </Reveal>
       )}
