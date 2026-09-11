@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>TrueTel Cloud Phone Proposal</title>
+<style>
+  :root {
+    --msp-blue: #009FE3;
+    /* #009FE3 is only ~2.9:1 against white/near-white — fails WCAG AA for
+       text. Use --msp-blue-text (4.6-4.9:1) for any small text on a light
+       background; keep --msp-blue for borders/accents/large blocks only. */
+    --msp-blue-text: #0077b6;
+    --msp-dark: #0f172a;
+    --text-main: #334155;
+    --text-light: #64748b;
+    --border-color: #e2e8f0;
+    --success-green: #10b981;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f1f5f9; font-family: Manrope, Arial, sans-serif; color: var(--text-main); }
+  .doc { max-width: 760px; margin: 0 auto; background: #ffffff; }
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #0a2540 80%);
+    color: #fff; padding: 48px 36px 56px; position: relative; overflow: hidden;
+  }
+  .cover::after {
+    content: ''; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px;
+    background: radial-gradient(circle at center, rgba(0,159,227,0.55), transparent 60%);
+  }
+  .eyebrow { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 12px; }
+  .cover h1 { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 0 0 14px; position: relative; z-index: 1; }
+  .cover p.sub { font-size: 15px; color: #d9e3ee; margin: 0; position: relative; z-index: 1; }
+  .section { padding: 32px 36px; border-bottom: 1px solid var(--border-color); page-break-after: always; }
+  .section:last-child { page-break-after: auto; }
+  .doc-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 18px; }
+  .logo-img { height: 26px; width: auto; display: block; }
+  .doc-meta { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--msp-blue-text); }
+  .hw-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+  .hw-card { display: flex; gap: 14px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; align-items: center; }
+  .hw-photo { width: 72px; height: 72px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid var(--border-color); flex-shrink: 0; }
+  .hw-info strong { display: block; font-size: 13px; color: var(--msp-dark); }
+  .hw-info .hw-sub { display: block; font-size: 11px; color: var(--text-light); margin-bottom: 6px; }
+  .hw-info ul { margin: 0; padding-left: 16px; font-size: 11.5px; columns: 2; column-gap: 16px; }
+  .app-screenshot { display: block; max-width: 260px; margin: 16px auto 0; border-radius: 8px; border: 1px solid var(--border-color); }
+  h2 { font-size: 18px; font-weight: 700; color: var(--msp-dark); border-bottom: 2px solid var(--msp-blue); padding-bottom: 6px; margin: 0 0 16px; }
+  h3 { font-size: 14px; font-weight: 700; color: var(--msp-dark); margin: 20px 0 8px; }
+  p { font-size: 13px; line-height: 1.55; }
+  .stat-row { display: flex; gap: 12px; margin: 20px 0; }
+  .stat { flex: 1; background: var(--msp-dark); color: #fff; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat .val { font-size: 22px; font-weight: 800; display: block; }
+  .stat .lbl { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+  ul.outcomes { list-style: none; padding: 0; margin: 0; }
+  ul.outcomes li { padding-left: 24px; position: relative; margin-bottom: 8px; font-size: 13.5px; }
+  ul.outcomes li::before { content: '\2713'; color: var(--success-green); position: absolute; left: 0; font-weight: 700; }
+  .compare { display: flex; gap: 16px; }
+  .compare > div { flex: 1; border-radius: 8px; padding: 14px 16px; }
+  .compare .current { background: #fff1f2; border: 1px solid #fecdd3; }
+  .compare .recommended { background: #f0f9ff; border: 1px solid #bae6fd; }
+  .compare h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .compare ul { margin: 0; padding-left: 18px; font-size: 12.5px; }
+  .compare li { margin-bottom: 6px; }
+  .roadmap { display: flex; gap: 12px; margin-top: 16px; }
+  .roadmap > div { flex: 1; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 12px; }
+  .roadmap strong { display: block; font-size: 11.5px; color: var(--msp-blue-text); margin-bottom: 4px; }
+  .roadmap span { font-size: 11.5px; color: var(--text-light); }
+  .why-box { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 6px; padding: 14px 16px; margin-top: 12px; }
+  .why-box ul { margin: 6px 0 0; padding-left: 18px; columns: 2; font-size: 12px; }
+  .service-tile { border-radius: 6px; padding: 12px 16px; margin-bottom: 8px; font-size: 12.5px; }
+  .service-tile.primary { background: linear-gradient(90deg,#0077b6,#005a8a); color: #fff; font-weight: 700; }
+  .service-tile.other { background: #f8fafc; border: 1px solid var(--border-color); }
+  .service-tile ul { margin: 6px 0 0; padding-left: 18px; font-weight: 400; }
+  .feature-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+  .feature-grid > div { flex: 1; min-width: 200px; }
+  .feature-grid ul { padding-left: 18px; font-size: 12.5px; margin: 6px 0 0; }
+  .enterprise-features { display: flex; gap: 12px; margin-top: 16px; }
+  .enterprise-features > div { flex: 1; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; }
+  .enterprise-features strong { display: block; font-size: 12.5px; margin-bottom: 4px; color: var(--msp-dark); }
+  .enterprise-features p { font-size: 11.5px; margin: 0; }
+  table.spec { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0 6px; }
+  table.spec th { background: var(--msp-dark); color: #fff; text-align: left; padding: 7px 10px; }
+  table.spec td { padding: 7px 10px; border-bottom: 1px solid var(--border-color); }
+  table.invest { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  table.invest th { background: var(--msp-dark); color: #fff; text-align: left; padding: 8px 10px; }
+  table.invest td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); }
+  table.invest tfoot td { font-weight: 700; border-top: 2px solid var(--msp-dark); }
+  .summary-total { background: var(--msp-dark); color: #fff; border-radius: 8px; padding: 20px; margin-top: 10px; text-align: center; }
+  .summary-total .amount { font-size: 30px; font-weight: 800; display: block; }
+  .summary-total .caption { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .notes { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 16px; font-size: 12.5px; margin-top: 16px; }
+  .terms-grid { columns: 2; column-gap: 28px; font-size: 11px; line-height: 1.5; }
+  .terms-grid p { font-size: 11px; margin: 0 0 10px; break-inside: avoid; }
+  .terms-grid strong { display: block; color: var(--msp-blue-text); font-size: 11px; margin-bottom: 2px; }
+  .sig-box { border: 1px dashed #cbd5e1; border-radius: 6px; padding: 18px; margin-top: 14px; }
+  .sig-box h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); margin: 0 0 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+  .sig-grid { display: flex; gap: 24px; margin-bottom: 18px; }
+  .sig-grid > div { flex: 1; }
+  .sig-line { border-bottom: 1px solid var(--msp-dark); height: 22px; margin-bottom: 4px; }
+  .sig-label { font-size: 10px; text-transform: uppercase; color: var(--text-light); }
+  .footer { padding: 24px 36px; text-align: center; font-size: 11px; color: var(--text-light); }
+</style>
+</head>
+<body>
+<div class='doc'>
+
+  <div class='cover'>
+    <span class='eyebrow'>CLOUD PBX &middot; UNIFIED COMMUNICATIONS</span>
+    <h1>Cloud Phone<br>Proposal</h1>
+    <p class='sub'>Prepared exclusively for <strong>__CLIENT_COMPANY__</strong><br>__DATE__ &middot; Prepared by __PREPARED_BY_NAME__</p>
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>1. Executive Overview</span></div>
+    <h2>The Case for TrueTel</h2>
+    <p>__EXEC_SUMMARY__</p>
+    <div class='stat-row'>
+      <div class='stat'><span class='val'>__HERO_STAT_1_VALUE__</span><span class='lbl'>__HERO_STAT_1_LABEL__</span></div>
+      <div class='stat'><span class='val'>__HERO_STAT_2_VALUE__</span><span class='lbl'>__HERO_STAT_2_LABEL__</span></div>
+      <div class='stat'><span class='val'>__HERO_STAT_3_VALUE__</span><span class='lbl'>__HERO_STAT_3_LABEL__</span></div>
+    </div>
+    <h3>Key Outcomes</h3>
+    <ul class='outcomes'>__KEY_OUTCOMES_ROWS__</ul>
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>2. Current Environment &amp; Proposed Solution</span></div>
+    <h2>__SCENARIO_LABEL__</h2>
+    <div class='compare'>
+      <div class='current'>
+        <h4 style='color:#9f1239;'>Current setup</h4>
+        <ul>__CURRENT_ROWS__</ul>
+      </div>
+      <div class='recommended'>
+        <h4 style='color:#0369a1;'>TrueTel recommendation</h4>
+        <ul>__RECOMMENDED_ROWS__</ul>
+      </div>
+    </div>
+    <h3>Seamless Migration Roadmap</h3>
+    <div class='roadmap'>
+      <div><strong>1. Preparation</strong><span>Hardware is pre-programmed and tested at TrueTel's lab before it reaches site.</span></div>
+      <div><strong>2. Parallel Install</strong><span>New service is installed alongside the old one to guarantee zero downtime.</span></div>
+      <div><strong>3. Go Live</strong><span>A technician attends site for cut-over and hands-on staff training.</span></div>
+    </div>
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>3. About TrueTel Solutions</span></div>
+    <h2>Why Businesses Choose TrueTel</h2>
+    <p>TrueTel Solutions Pty Ltd is a Melbourne-based ISP, MSP, and Cybersecurity provider trusted by businesses across Victoria. We specialise in delivering modern, scalable, and reliable technology solutions for growing organisations.</p>
+    <div class='why-box'>
+      <ul>
+        <li><strong>Trusted by 5,000+</strong> Australian businesses</li>
+        <li><strong>20+ years</strong> of combined industry experience</li>
+        <li>Certified <strong>Check Point Harmony</strong> Partner</li>
+        <li><strong>Local Melbourne-based</strong> support team</li>
+        <li>Proven expertise across <strong>Telecom, IT &amp; Security</strong></li>
+      </ul>
+    </div>
+    <h3>Our Core Services</h3>
+    <div class='service-tile primary'>Cloud Phone System (Primary Service)
+      <ul><li>Cloud Phone &amp; Hosted PBX solutions</li><li>Built on Yealink &amp; Cisco hardware</li></ul>
+    </div>
+    <div class='service-tile other'>Business Internet &amp; Enterprise Connectivity
+      <ul><li>NBN, Fibre &amp; 4G/5G failover links</li><li>Enterprise Ethernet services</li></ul>
+    </div>
+    <div class='service-tile other'>Managed IT Services (MSP)
+      <ul><li>Proactive IT support &amp; maintenance</li><li>Microsoft 365 licensing &amp; endpoint management</li></ul>
+    </div>
+    <div class='service-tile other'>Cybersecurity &amp; Endpoint Protection
+      <ul><li>Check Point Harmony Security Suite</li><li>Endpoint protection &amp; compliance</li></ul>
+    </div>
+    <div class='service-tile other'>AI Voice Agent (Automation &amp; Customer Engagement)
+      <ul><li>Inbound call handling during peak and holiday periods</li><li>Automatic email/SMS updates and call summaries</li></ul>
+    </div>
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>4. Cloud Phone System Solutions</span></div>
+    <h2>A Complete UCaaS Platform</h2>
+    <p>TrueTel's Cloud PBX is a complete Unified Communications as a Service (UCaaS) platform. It decouples your business voice from your physical office, allowing your team to operate seamlessly from the office, home, or on the road.</p>
+    <div class='feature-grid'>
+      <div>
+        <h3 style='margin-top:0;'>Unified Communications App</h3>
+        <p style='margin-bottom:0;'>Empower your team with the TrueTel softphone app, available on iOS, Android, and desktop.</p>
+        <ul>
+          <li><strong>One Number Reach:</strong> Make and receive calls showing your business caller ID.</li>
+          <li><strong>Visual Voicemail:</strong> Voicemail-to-email and in-app playback.</li>
+          <li><strong>Team Presence:</strong> See who is available, busy, or on a call.</li>
+          <li><strong>Work Anywhere:</strong> Staff can remain connected from home or on the road.</li>
+        </ul>
+        <img src='__SOFTPHONE_IMG_URL__' alt='TrueTel softphone app interface' class='app-screenshot' />
+      </div>
+      <div>
+        <h3 style='margin-top:0;'>Enterprise Features Included</h3>
+        <div class='enterprise-features'>
+          <div><strong>IVR &amp; Auto Attendant</strong><p>Professional greetings with options and after-hours routing.</p></div>
+          <div><strong>Call Recording</strong><p>Optional call recording with centralised storage and retrieval.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  __HARDWARE_SECTION__
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>6. Technical Scope of Services</span></div>
+    <h2>Network Requirements &amp; Service Comparison</h2>
+    <p>The proposed solution includes the design, implementation, and ongoing management of the following components:</p>
+    <table class='spec'>
+      <thead><tr><th>Requirement</th><th>Specification</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Bandwidth</strong></td><td>Minimum 100kbps symmetrical per concurrent call (approx. 10 calls = 1 Mbps).</td></tr>
+        <tr><td><strong>Latency &amp; Jitter</strong></td><td>Latency &lt; 150ms, Jitter &lt; 20ms for HD voice quality.</td></tr>
+      </tbody>
+    </table>
+    <table class='spec'>
+      <thead><tr><th>Feature</th><th>Traditional Telco</th><th>TrueTel MSP Service</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Support Location</strong></td><td>Offshore call centre</td><td><strong>Local Melbourne team</strong></td></tr>
+        <tr><td><strong>Installation</strong></td><td>Self-install (hardware posted)</td><td><strong>Managed onsite/remote project delivery</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>7. Investment Summary</span></div>
+    <h2>__TIER_LABEL__ Tier</h2>
+    __INVESTMENT_BODY__
+    <p style='font-size:12px; color:var(--text-light); margin-top:10px;'>Contract term: __CONTRACT_TERM__ months. All prices in AUD, billed monthly in advance.</p>
+    __NOTES_BLOCK__
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>8. Terms &amp; Conditions</span></div>
+    <h2>Commercial Terms</h2>
+    <div class='terms-grid'>
+      <p><strong>1. Validity of Proposal</strong>This proposal remains valid for 15 days from the date of issue, unless withdrawn or extended in writing by TrueTel Solutions Pty Ltd.</p>
+      <p><strong>2. Confidentiality</strong>The contents of this proposal are confidential and commercially sensitive and must not be disclosed to any third party without prior written consent.</p>
+      <p><strong>3. Intellectual Property</strong>TrueTel Solutions retains ownership of all intellectual property contained in this proposal, including all documents, diagrams, and processes supplied.</p>
+      <p><strong>4. Payment Terms</strong>Managed services are billed monthly in advance via Direct Debit. Invoices are payable within 7 days. One-off project items are invoiced upon approval.</p>
+      <p><strong>5. Technical Appraisal</strong>Pricing is based on current understanding of the environment. Additional design, remediation, cabling, or hardware may incur additional charges upon approval.</p>
+      <p><strong>6. Scope of Services</strong>Inclusions are strictly limited to the items listed in the Investment Summary. Out-of-scope work will be charged at current hourly rates.</p>
+      <p><strong>7. Support Hours &amp; SLA</strong>Standard Support: Mon-Fri, 8:30 AM-5:30 PM AEST. Critical Faults (P1): 2-hour response. Standard Requests (P3): next business day.</p>
+      <p><strong>8. Third-Party Vendors</strong>We liaise with third-party vendors (e.g. NBN Co) on your behalf but are not liable for faults or delays they cause.</p>
+      <p><strong>9. Exclusions</strong>Unless quoted: onsite support, cabling, major hardware replacement, software development, and unauthorised "Shadow IT" support are excluded.</p>
+      <p><strong>10. Liability</strong>To the maximum extent permitted by law, TrueTel excludes indirect or consequential damages. Liability is limited to one month's service fees.</p>
+      <p><strong>11. Early Termination</strong>Early cancellation of a fixed-term agreement incurs 100% of remaining monthly fees plus subsidised hardware costs. 30 days' written notice required.</p>
+      <p><strong>12. Privacy &amp; Data Protection</strong>We comply with the Australian Privacy Act. Client data is confidential, stored securely, and never sold to third parties.</p>
+      <p><strong>13. Hardware Warranty</strong>Hardware supplied by TrueTel carries the manufacturer's warranty (typically 12 months); TrueTel assists with claims but is not the manufacturer.</p>
+      <p><strong>14. Fair Use Policy</strong>Unlimited call plans cover normal business use and exclude telemarketing, call centres, and auto-dialers.</p>
+      <p><strong>15. Emergency Services</strong>VoIP relies on power and internet. In an outage you may be unable to call 000 -- keep a mobile backup.</p>
+      <p><strong>16. Force Majeure</strong>Neither party is liable for failure to perform due to events beyond reasonable control.</p>
+      <p><strong>17. Jurisdiction</strong>This agreement is governed by the laws of Victoria, Australia.</p>
+    </div>
+  </div>
+
+  <div class='section'>
+    <div class='doc-header'><img src='__LOGO_URL__' alt='TrueTel' class='logo-img' /><span class='doc-meta'>9. Formal Acceptance</span></div>
+    <h2>Ready to proceed?</h2>
+    <p>By signing below, the Client accepts the Proposed Solution, Investment Summary, and Terms &amp; Conditions contained within this proposal, and authorises TrueTel Solutions to proceed with provisioning.</p>
+    <div class='sig-box'>
+      <h4>Client Authorisation</h4>
+      <div class='sig-grid'>
+        <div><div class='sig-line'></div><span class='sig-label'>Full Name</span></div>
+        <div><div class='sig-line'></div><span class='sig-label'>Position / Title</span></div>
+      </div>
+      <div class='sig-grid'>
+        <div><div class='sig-line'></div><span class='sig-label'>Signature</span></div>
+        <div><div class='sig-line'></div><span class='sig-label'>Date</span></div>
+      </div>
+    </div>
+    <div class='sig-box'>
+      <h4>Direct Debit Request</h4>
+      <p style='font-size:10.5px; margin-bottom:12px;'>I/We authorise TrueTel Solutions (or its designated payment processor) to debit the account identified below through the Bulk Electronic Clearing System (BECS) for any amounts due under this agreement.</p>
+      <div class='sig-grid'>
+        <div><div class='sig-line'></div><span class='sig-label'>Account Name</span></div>
+        <div><div class='sig-line'></div><span class='sig-label'>BSB &amp; Account Number</span></div>
+      </div>
+      <div class='sig-grid'>
+        <div><div class='sig-line'></div><span class='sig-label'>Account Holder Signature</span></div>
+        <div><div class='sig-line'></div><span class='sig-label'>Date</span></div>
+      </div>
+    </div>
+    <p style='text-align:center; margin-top:16px;'>Please sign and return to <strong>__PREPARED_BY_EMAIL__</strong> or reply directly to this email to confirm by return correspondence.</p>
+  </div>
+
+  <div class='footer'>
+    TrueTel Solutions Pty Ltd &middot; ABN 79 745 894 636 &middot; 1300 70 85 85 &middot; __PREPARED_BY_EMAIL__
+  </div>
+
+</div>
+</body>
+</html>

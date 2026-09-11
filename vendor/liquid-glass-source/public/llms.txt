@@ -1,0 +1,69 @@
+# Liquid Glass
+
+> A WebGL2 recreation of Figma's Glass effect. Draw or paste a shape, tune the
+> glass, then copy a generated brief that rebuilds the same look on your own
+> site. Calibrated against Figma's own Glass panel.
+
+Figma's Glass is a 2D screen-space effect: no 3D, no volume, no light
+transport. It displaces and colour-splits the pixels rendered behind a shape.
+On a flat background it is invisible, because refracting a uniform colour
+returns that colour and splitting it into R/G/B averages back to it.
+
+## Pages
+
+- [Editor](/): the interactive tool. Client-rendered WebGL2 canvas.
+- [Guide](/guide.html): full written documentation, algorithm and settings
+  reference. Static HTML, no JavaScript required.
+
+## Algorithm
+
+1. Rasterise the shape path to a coverage mask.
+2. Height field: Euclidean distance transform of the mask, mapped to a rounded
+   rim profile `t = min(dist/depth, 1)`, `height = sqrt(1 - (1-t)^2)`, then
+   blurred slightly so the medial axis does not crease.
+3. Surface normal from a 3x3 Sobel gradient, with a `tanh` soft-limit on slope
+   (`scale = lim * tanh(gm/lim) / gm`, lim ~= 1.35) so thin features cannot
+   spike into hard wedges.
+4. Refraction: offset the backdrop lookup by `normal.xy * refraction`.
+5. Frost and dispersion as TWO SEPARATE accumulations, blended by a rim mask.
+   Combining them into one loop tints every frost sample, so raising frost
+   paints rainbow rings across the interior instead of blurring.
+   - Frost: untinted disc average, golden-angle tap placement
+     (`angle = i * 2.39996`), sampled from a mipmap level matched to tap
+     spacing so a sparse disc still reads as a smooth gaussian.
+   - Dispersion: spectral weights (gaussians centred at 0.0 / 0.5 / 1.0 for
+     R/G/B) sampled along the surface gradient, with no frost offset.
+6. Chroma restore: spectral averaging pulls toward grey, so keep the
+   integrated luminance and scale only the colour difference from it.
+7. Composite over the backdrop by coverage.
+
+## Settings
+
+Refraction, Depth, Dispersion, Frost, Splay, Light angle and intensity mirror
+Figma's 0-100 sliders one-for-one. Solver internals (rim falloff, normal gain,
+chroma, spectral spread, height-field smoothing) are the shader's own units.
+Rim falloff, chroma and spectral spread are the three that decide realism.
+
+## Hard-won constraints
+
+- Dispersion is a rim phenomenon. It never appears in the interior.
+- Band width and sample count must move together. A wide band with too few
+  taps quantises into visible steps.
+- Never use per-pixel dithering to smooth the spectral integral; it trades
+  banding for visible grain.
+- Frost must be a pure blur. If raising it adds colour, frost and dispersion
+  are coupled somewhere they should not be.
+- Glass carries a baseline blur even at Frost 0, because refraction gathers the
+  backdrop over a cone rather than a single ray.
+- The effect requires a backdrop texture. Browsers cannot read live page pixels
+  from a shader, so supply an image, video frame, or DOM snapshot.
+
+## Presets
+
+Figma default, Frosted card, Prism, Water droplet, Subtle UI glass, Reading
+lens, Smoked glass. Presets change glass and solver settings only; shape, size
+and background are preserved.
+
+## Author
+Built by Miftahul Islam Efaz (Chattogram, Bangladesh) - full-stack and WebGL developer.
+Profile: /about.html | https://github.com/Miftahul-Islam-Efaz | https://miftahulislamefaz.xyz/

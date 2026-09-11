@@ -1,0 +1,320 @@
+/* Responsive layer. Imported last, so it wins over style.css, help.css and
+   chrome.css without needing !important.
+
+   Three problems this fixes, in order of how often they bite:
+
+   1. #stage is sized by width alone (100%, max 1200px) with a fixed aspect
+      ratio, so its HEIGHT is whatever the width implies. On a short or wide
+      monitor that height exceeds the viewport, and because body is
+      overflow:hidden the bottom of the canvas -- including the toolbar -- is
+      simply cut off. The stage must be bounded by height as well as width.
+   2. The left rail is position:fixed, so it floats over the canvas instead of
+      reserving space next to it.
+   3. Below 860px the panel stacks under the canvas, but the rail, the header
+      popovers and the touch targets were never adapted. */
+
+/* Stage aspect ratio is 953 / 535.5 = 1.7797. Height budget subtracts the
+   header bar, the coach line and the vertical padding of #work. */
+:root {
+	--stage-ar: 1.7797;
+	--chrome-v: 150px; /* topbar + coach + #work padding */
+	--rail-w: 80px;
+}
+
+html,
+body {
+	/* Stop iOS inflating type in landscape. */
+	-webkit-text-size-adjust: 100%;
+}
+
+/* ---------------- desktop: bound the stage by height too ---------------- */
+#stage {
+	/* min() of the width cap and the width implied by the height budget, so the
+	   canvas always fits without clipping the floating toolbar. dvh rather than
+	   vh so mobile browser chrome is accounted for. */
+	max-width: min(1200px, calc((100dvh - var(--chrome-v)) * var(--stage-ar)));
+}
+
+/* Reserve room for the fixed left rail so it never overlaps the canvas. */
+@media (min-width: 861px) {
+	#work {
+		padding-left: calc(var(--rail-w) + 8px);
+	}
+}
+
+/* Narrow desktops / small laptops: tighten padding before shrinking anything. */
+@media (max-width: 1180px) {
+	:root {
+		--panel-w: 232px;
+		--chrome-v: 132px;
+	}
+	#work {
+		padding: 18px;
+		padding-left: calc(var(--rail-w) + 4px);
+	}
+}
+
+/* Short viewports: the header and coach line eat the height budget, so drop
+   the coach line and tighten spacing rather than clipping the canvas. */
+@media (max-height: 700px) and (min-width: 861px) {
+	:root {
+		--chrome-v: 108px;
+	}
+	#work {
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+	#coach {
+		display: none;
+	}
+	#toolbar {
+		bottom: 10px;
+	}
+}
+
+/* Large and ultra-wide displays: let the canvas and inspector breathe. */
+@media (min-width: 1700px) {
+	:root {
+		--panel-w: 292px;
+	}
+	#stage {
+		max-width: min(1440px, calc((100dvh - var(--chrome-v)) * var(--stage-ar)));
+	}
+	#topbar {
+		max-width: 1440px;
+	}
+}
+
+@media (min-width: 2300px) {
+	#stage {
+		max-width: min(1680px, calc((100dvh - var(--chrome-v)) * var(--stage-ar)));
+	}
+	#topbar {
+		max-width: 1680px;
+	}
+}
+
+/* ---------------- tablet / mobile ---------------- */
+@media (max-width: 860px) {
+	:root {
+		--chrome-v: 96px;
+	}
+
+	#work {
+		padding: 10px 10px 14px;
+	}
+
+	/* Width-bound only here: the page scrolls vertically on mobile, so a tall
+	   stage is fine, and height-capping it would waste horizontal space. */
+	#stage {
+		max-width: 100%;
+	}
+
+	/* The header bar holds three labelled buttons; let them wrap instead of
+	   overflowing off-screen. */
+	#topbar {
+		flex-wrap: wrap;
+		gap: 2px;
+		margin-bottom: 8px;
+	}
+	#topbar .tbsep {
+		display: none;
+	}
+	#topbar .tblabel {
+		width: 100%;
+		padding: 2px 4px 4px;
+	}
+
+	/* A 296px popover overflows a 360px screen once padding is counted. Pin it
+	   to both edges of the bar instead. */
+	.hpop {
+		left: 0;
+		right: 0;
+		width: auto;
+		max-height: 70dvh;
+		overflow-y: auto;
+	}
+
+	#coach {
+		display: none;
+	}
+
+	/* Panel becomes a normal scrolling section under the canvas. */
+	#panel {
+		min-height: 0;
+		overflow-y: visible;
+	}
+	#phead {
+		/* Sticky inside a page-scrolling column would stick to the wrong box. */
+		position: static;
+	}
+
+	/* Rail becomes a bottom bar. Fixed, because the page scrolls and these
+	   controls must stay reachable. */
+	.lg-rail {
+		top: auto;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		transform: none;
+		flex-direction: row;
+		justify-content: center;
+		gap: 4px;
+		padding: 6px;
+		background: rgba(28, 28, 28, 0.94);
+		border-top: 1px solid var(--line-2);
+		backdrop-filter: blur(8px);
+		/* Clear the iOS home indicator. */
+		padding-bottom: max(6px, env(safe-area-inset-bottom));
+	}
+	.lg-railbtn {
+		flex: 1 1 0;
+		max-width: 120px;
+		height: 46px;
+	}
+
+	/* So the bottom bar never covers the end of the inspector. */
+	body {
+		padding-bottom: 64px;
+	}
+
+	/* Preset list rises from the bar as a sheet. */
+	.lg-flyout {
+		top: auto;
+		left: 8px;
+		right: 8px;
+		bottom: 62px;
+		width: auto;
+		max-height: 60dvh;
+		transform: none;
+		animation: none;
+	}
+}
+
+/* ---------------- touch targets ---------------- */
+/* Keyed to pointer type, not width: a touch laptop needs these too, and a
+   narrow desktop window does not. */
+@media (pointer: coarse) {
+	.tool {
+		width: 40px;
+		height: 40px;
+	}
+	.tool svg {
+		width: 18px;
+		height: 18px;
+	}
+	#toolbar {
+		gap: 3px;
+		padding: 6px;
+	}
+
+	/* 7px resize handles are unusable with a fingertip. Grow the hit area while
+	   keeping the dot visually small, via a transparent expanded box. */
+	#sel .h {
+		width: 20px;
+		height: 20px;
+		margin: -10px 0 0 -10px;
+		border: 0;
+		border-radius: 50%;
+		background: transparent;
+	}
+	#sel .h::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 9px;
+		height: 9px;
+		transform: translate(-50%, -50%);
+		border: 1px solid var(--accent);
+		border-radius: 2px;
+		background: #fff;
+	}
+
+	.hbtn,
+	.ddbtn,
+	button {
+		min-height: 32px;
+	}
+	.ddopt {
+		height: 34px;
+	}
+}
+
+/* ---------------- very small phones ---------------- */
+@media (max-width: 420px) {
+	#work {
+		padding: 8px 8px 12px;
+	}
+	#topbar .hbtn {
+		padding: 0 7px;
+		gap: 4px;
+	}
+	.lg-railbtn {
+		font-size: 8px;
+	}
+	.lg-railbtn svg {
+		width: 15px;
+		height: 15px;
+	}
+}
+
+/* ---------------- landscape phones ---------------- */
+/* Very little height: the stacked layout would push the canvas off-screen. */
+@media (max-width: 900px) and (max-height: 480px) and (orientation: landscape) {
+	body {
+		flex-direction: row;
+		overflow: hidden;
+		padding-bottom: 0;
+	}
+	#panel {
+		flex: 0 0 200px;
+		width: 200px;
+		height: 100dvh;
+		overflow-y: auto;
+		border-left: 1px solid #000;
+		border-top: 0;
+	}
+	#stage {
+		max-width: calc((100dvh - 74px) * var(--stage-ar));
+	}
+	.lg-rail {
+		flex-direction: column;
+		left: 0;
+		right: auto;
+		top: 50%;
+		bottom: auto;
+		transform: translateY(-50%);
+		padding: 4px;
+		border-top: 0;
+		background: transparent;
+		backdrop-filter: none;
+	}
+	.lg-railbtn {
+		width: 40px;
+		height: 40px;
+		flex: none;
+	}
+	#work {
+		padding-left: 48px;
+	}
+	.lg-flyout {
+		top: 50%;
+		bottom: auto;
+		left: 48px;
+		right: auto;
+		width: 240px;
+		transform: translateY(-50%);
+	}
+}
+
+/* ---------------- accessibility ---------------- */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

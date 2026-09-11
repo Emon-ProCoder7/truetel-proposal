@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="theme-color" content="#0b0b0b" />
+
+		<title>Liquid Glass — Figma's Liquid Glass Effect in the Browser</title>
+		<meta
+			name="description"
+			content="Recreate Figma's liquid glass effect on the web. The same controls — depth, dispersion, frost, splay, refraction — rendered in WebGL2, on any shape, in every modern browser."
+		/>
+		<link rel="canonical" href="https://liquidglass.miftahulislamefaz.xyz/" />
+		<link rel="icon" href="/Images/favicon-256.png" type="image/png" sizes="256x256" />
+		<link rel="icon" href="/Images/icon-512.png" type="image/png" sizes="512x512" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-180.png" />
+		<link rel="author" href="https://liquidglass.miftahulislamefaz.xyz/about.html" />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Liquid Glass" />
+		<meta property="og:title" content="Liquid Glass — Figma's Liquid Glass Effect in the Browser" />
+		<meta
+			property="og:description"
+			content="The same controls as Figma's glass effect, rendered in WebGL2, on any shape, in every modern browser."
+		/>
+		<meta property="og:url" content="https://liquidglass.miftahulislamefaz.xyz/" />
+		<meta property="og:image" content="https://liquidglass.miftahulislamefaz.xyz/Images/og-thumbnail.jpg" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:type" content="image/jpeg" />
+		<meta property="og:image:alt" content="Liquid Glass — Figma’s liquid glass effect rendered in WebGL2." />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image" content="https://liquidglass.miftahulislamefaz.xyz/Images/og-thumbnail.jpg" />
+		<meta name="twitter:image:alt" content="Liquid Glass — Figma’s liquid glass effect rendered in WebGL2." />
+		<meta name="twitter:creator" content="@Miftahul_Islam9" />
+		<meta name="twitter:title" content="Liquid Glass — Figma's Liquid Glass Effect in the Browser" />
+		<meta
+			name="twitter:description"
+			content="The same controls as Figma's glass effect, rendered in WebGL2, on any shape, in every modern browser."
+		/>
+
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@graph": [
+					{
+						"@type": "WebApplication",
+						"@id": "https://liquidglass.miftahulislamefaz.xyz/#app",
+						"name": "Liquid Glass",
+						"url": "https://liquidglass.miftahulislamefaz.xyz/",
+						"applicationCategory": "DesignApplication",
+						"operatingSystem": "Any modern browser",
+						"description": "A browser tool that recreates Figma's liquid glass effect with the same controls — depth, dispersion, frost, splay and refraction — rendered in WebGL2 on any shape.",
+						"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+						"author": { "@id": "https://liquidglass.miftahulislamefaz.xyz/about.html#person" },
+						"creator": { "@id": "https://liquidglass.miftahulislamefaz.xyz/about.html#person" }
+					},
+					{
+						"@type": "FAQPage",
+						"@id": "https://liquidglass.miftahulislamefaz.xyz/#faq",
+						"mainEntity": [
+							{
+								"@type": "Question",
+								"name": "Can I get Figma's liquid glass effect on a website?",
+								"acceptedAnswer": {
+									"@type": "Answer",
+									"text": "Yes. Figma's glass effect is screen-space backdrop displacement, which CSS cannot express on its own. Liquid Glass reproduces it in a WebGL2 shader using the same parameter names, so a design handed over from Figma can be matched on the web."
+								}
+							},
+							{
+								"@type": "Question",
+								"name": "Why does the CSS backdrop-filter approach look wrong?",
+								"acceptedAnswer": {
+									"@type": "Answer",
+									"text": "backdrop-filter blurs the backdrop but does not refract it, and the SVG feDisplacementMap trick used to fake refraction only works in Chromium. Liquid Glass renders the displacement directly, so it behaves the same across modern browsers."
+								}
+							},
+							{
+								"@type": "Question",
+								"name": "Why is my glass layer invisible in Figma?",
+								"acceptedAnswer": {
+									"@type": "Answer",
+									"text": "The effect is not drawn at 100% fill opacity, and it needs a backdrop with visible detail or contrast. Over a flat colour there is nothing to refract, so the shape disappears."
+								}
+							}
+						]
+					}
+				]
+			}
+		</script>
+		<script>
+			document.documentElement.classList.add('js-anim')
+			setTimeout(function () {
+				document.documentElement.classList.add('revealed')
+			}, 2500)
+		</script>
+
+		<link rel="stylesheet" href="/critical.css" />
+	</head>
+
+	<body>
+		<div class="boot" aria-hidden="true"></div>
+
+		<!-- ================= nav ================= -->
+		<nav class="nav" data-reveal style="--i: 0">
+			<div class="nav__inner">
+				<a class="brand" href="/">
+					<img class="brand__logo" src="/Images/logo-256.png" width="22" height="22" alt="" decoding="async" /><span class="brand__name">Liquid Glass</span>
+					<span class="brand__rule" aria-hidden="true"></span>
+					<span class="brand__meta">WebGL2</span>
+				</a>
+
+				<div class="nav__links">
+					<a class="navlink hideSm" href="#showcase"><i aria-hidden="true">01</i><span>Examples</span></a>
+					<a class="navlink hideSm" href="#how"><i aria-hidden="true">02</i><span>How it works</span></a>
+					<a class="navlink hideSm" href="/guide.html"><i aria-hidden="true">03</i><span>Guide</span></a>
+				</div>
+
+				<a class="navcta" href="/app.html">
+					<span>Open editor</span>
+					<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 11 11 1M4 1h7v7" /></svg>
+				</a>
+			</div>
+			<span class="nav__prog" aria-hidden="true"></span>
+		</nav>
+
+		<!-- ================= hero ================= -->
+		<header class="bleed hero">
+			<video
+				class="vid"
+				src="/Videos/Hero-video-bg-loop.mp4"
+				loop
+				muted
+				playsinline
+				autoplay
+				preload="auto"
+				aria-hidden="true"
+			></video>
+			<div class="veil hero"></div>
+
+			<h1 data-reveal style="--i: 1">Light that bends like the real thing.</h1>
+			<p class="sub" data-reveal style="--i: 2">
+				Depth, dispersion, frost, splay, refraction — the same five controls you
+				know from Figma, rendered live in WebGL2 on any shape you draw.
+			</p>
+			<div class="cta" data-reveal style="--i: 3">
+				<a class="btn solid" href="/app.html">Open the editor</a>
+				<a class="btn quiet" href="#showcase">See examples</a>
+				<a
+					class="btn star"
+					href="https://github.com/Miftahul-Islam-Efaz/LIQUID-GLASS"
+					target="_blank"
+					rel="noopener"
+					aria-label="Star Liquid Glass on GitHub"
+				>
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.6.9-4.8 4.8 1.2 6.8L12 18l-5.9 3.2 1.2-6.8L2.5 9.6l6.6-.9z" /></svg>
+					<span>Star on GitHub</span>
+					<span class="btn__n" data-star-count hidden></span>
+				</a>
+			</div>
+			<p class="thanks" data-reveal style="--i: 4">
+				Free and open source. A star is the whole thank-you I'm after.
+			</p>
+		</header>
+
+		<!-- ================= showcase ================= -->
+		<section class="bleed show" id="showcase">
+			<div class="bleed__bg"><video
+				class="vid"
+				src="/Videos/2nd-video-bg-loop.mp4"
+				loop
+				muted
+				playsinline
+				preload="auto"
+				aria-hidden="true"
+			></video></div>
+			<div class="veil show"></div>
+
+			<div class="wrap">
+				<div class="head">
+					<span class="micro">Examples</span>
+					<h2>Every preset, on a real component.</h2>
+					<p class="lead">
+						One backdrop, twelve pieces of glass, twelve different recipes.
+						The label under each piece names the preset it uses — and all of it is
+						clickable, so you can watch the material react.
+					</p>
+				</div>
+
+				<div class="board">
+					<!-- 01 — side navigation rail -->
+					<article class="spec s-4">
+						<header class="spec__head">
+							<span class="spec__no">01</span>
+							<div>
+								<h3 class="spec__name">Side navigation</h3>
+								<p class="spec__note">Figma default — the calibration reference. Pick an icon.</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="item">
+								<div class="glass rail" data-preset="figma" data-seg=".rail__i" role="group" aria-label="Demo side navigation">
+									<button type="button" class="rail__i is-on" aria-label="Overview">
+										<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z" /></svg>
+									</button>
+									<button type="button" class="rail__i" aria-label="Calendar">
+										<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4" /></svg>
+									</button>
+									<button type="button" class="rail__i" aria-label="Messages">
+										<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H9l-5 4z" /></svg>
+									</button>
+									<button type="button" class="rail__i" aria-label="Files">
+										<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h6l2 2h10v10H3z" /></svg>
+									</button>
+									<button type="button" class="rail__i" aria-label="Reports">
+										<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19v-7M10 19V5M15 19v-4M20 19V9" /></svg>
+									</button>
+								</div>
+								<span class="tag">Figma default</span>
+							</div>
+						</div>
+					</article>
+
+					<!-- 02 — command palette: two presets stacked -->
+					<article class="spec s-8">
+						<header class="spec__head">
+							<span class="spec__no">02</span>
+							<div>
+								<h3 class="spec__name">Command palette</h3>
+								<p class="spec__note">
+									A razor-sharp lens over a heavy frosted sheet. Click the bar, or
+									press ⌘K, to open and close it.
+								</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="cmd is-open">
+								<div class="item wide">
+									<button type="button" class="glass cmd__bar" data-preset="lens" aria-expanded="true">
+										<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4.6-4.6" /></svg>
+										<span>Search or ask</span>
+										<span class="cmd__kbd">⌘K</span>
+									</button>
+									<span class="tag">Reading lens</span>
+								</div>
+								<div class="item wide cmd__pop">
+									<div class="glass cmd__menu" data-preset="frosted" data-seg=".cmd__row">
+										<button type="button" class="cmd__row is-on">
+											<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" /></svg>
+											<span>Applications</span><i>⌘1</i>
+										</button>
+										<button type="button" class="cmd__row">
+											<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h6l2 2h10v10H3z" /></svg>
+											<span>Files</span><i>⌘2</i>
+										</button>
+										<button type="button" class="cmd__row">
+											<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 5v8l-8 5-8-5V8z" /></svg>
+											<span>Actions</span><i>⌘3</i>
+										</button>
+										<button type="button" class="cmd__row">
+											<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM6 6h12v14H6z" /></svg>
+											<span>Clipboard</span><i>⌘4</i>
+										</button>
+									</div>
+									<span class="tag">Frosted card</span>
+								</div>
+							</div>
+						</div>
+					</article>
+
+					<!-- 03 — action pills: two presets side by side -->
+					<article class="spec s-4">
+						<header class="spec__head">
+							<span class="spec__no">03</span>
+							<div>
+								<h3 class="spec__name">Action pills</h3>
+								<p class="spec__note">Maximum colour next to near-zero colour. Both toggle.</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="cluster">
+								<div class="item">
+									<div class="tray">
+										<button type="button" class="glass aipill" data-preset="prism" aria-pressed="false">
+											<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z" /></svg>
+											<span>AI mode</span>
+										</button>
+									</div>
+									<span class="tag">Prism</span>
+								</div>
+								<div class="item">
+									<button type="button" class="glass disc" data-preset="smoke" aria-label="Back to top">
+										<svg viewBox="0 0 24 24" aria-hidden="true">
+											<path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									</button>
+									<span class="tag">Smoked glass</span>
+								</div>
+							</div>
+						</div>
+					</article>
+
+					<!-- 04 — agents pill with orb + popover -->
+					<article class="spec s-4">
+						<header class="spec__head">
+							<span class="spec__no">04</span>
+							<div>
+								<h3 class="spec__name">Agent switcher</h3>
+								<p class="spec__note">Thick rounded rim, strong bend, almost no haze. Opens a hazier menu.</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="item">
+								<div class="agents__wrap">
+									<div class="tray">
+										<button
+											type="button"
+											class="glass agents"
+											data-preset="droplet"
+											data-pop=".agents__pop"
+											aria-expanded="false"
+										>
+											<span class="orb"></span>
+											<span class="agents__label">Ask agents</span>
+											<svg class="agents__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+										</button>
+									</div>
+									<div class="glass agents__pop" data-preset="vapour">
+										<span class="pop__row">Research</span>
+										<span class="pop__row">Write a draft</span>
+										<span class="pop__row">Review the code</span>
+									</div>
+								</div>
+								<span class="tag">Water droplet · menu on Vapour</span>
+							</div>
+						</div>
+					</article>
+
+					<!-- 05 — segmented navbar strip -->
+					<article class="spec s-4">
+						<header class="spec__head">
+							<span class="spec__no">05</span>
+							<div>
+								<h3 class="spec__name">Segmented bar</h3>
+								<p class="spec__note">Restrained enough to sit behind real navigation. Try a segment.</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="item">
+								<div class="glass strip" data-preset="subtle" data-seg=".strip__i">
+									<span class="strip__brand">LG</span>
+									<button type="button" class="strip__i is-on">Design</button>
+									<button type="button" class="strip__i">Build</button>
+									<button type="button" class="strip__i">Ship</button>
+								</div>
+								<span class="tag">Subtle UI glass</span>
+							</div>
+						</div>
+					</article>
+
+					<!-- 06 — control panel: two presets, one per control -->
+					<article class="spec s-6">
+						<header class="spec__head">
+							<span class="spec__no">06</span>
+							<div>
+								<h3 class="spec__name">Controls</h3>
+								<p class="spec__note">Drag the slider, flip the switch. Liquid metal against cut crystal.</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="panel">
+								<div class="panel__row">
+									<span class="micro">Refraction</span>
+									<div class="item">
+										<div
+											class="glass toggle"
+											data-preset="mercury"
+											data-switch
+											role="switch"
+											tabindex="0"
+											aria-checked="false"
+											aria-label="Demo toggle"
+										>
+											<span class="knob"></span>
+										</div>
+										<span class="tag">Mercury</span>
+									</div>
+								</div>
+								<div class="panel__row col">
+									<span class="micro">Depth</span>
+									<div class="item wide">
+										<div
+											class="glass slider"
+											data-preset="crystal"
+											role="slider"
+											tabindex="0"
+											aria-valuemin="0"
+											aria-valuemax="100"
+											aria-valuenow="58"
+											aria-label="Demo slider"
+										>
+											<span class="fill"></span><span class="thumb"></span>
+										</div>
+										<span class="tag">Crystal</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</article>
+
+					<!-- 07 — content card -->
+					<article class="spec s-6">
+						<header class="spec__head">
+							<span class="spec__no">07</span>
+							<div>
+								<h3 class="spec__name">Content card</h3>
+								<p class="spec__note">Deepest tint on the board, with a bright-rimmed button on top.</p>
+							</div>
+						</header>
+						<div class="spec__stage">
+							<div class="item wide">
+								<div class="glass card" data-preset="onyx">
+									<h4>Title on card</h4>
+									<p>
+										Refraction reads the light behind the panel, so the surface
+										changes as the backdrop moves. Nothing here is a static image.
+									</p>
+									<div class="card__foot">
+										<button type="button" class="glass explore" data-preset="halo">
+											<span>Explore</span>
+											<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6l5 5 5-5" /></svg>
+										</button>
+										<span class="micro">Frost 5 · Splay 0</span>
+									</div>
+								</div>
+								<span class="tag">Onyx · button on Halo</span>
+							</div>
+						</div>
+					</article>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= how it works ================= -->
+		<section class="steps" id="how">
+			<div class="wrap">
+				<div class="head">
+					<span class="micro">How it works</span>
+					<h2>What this is, and why it matters.</h2>
+					<p class="lead">
+						Figma's glass effect bends the backdrop behind a shape. CSS can blur
+						that backdrop, but it cannot bend it — so handed-over designs never
+						quite match. This renders the real thing in a shader.
+					</p>
+				</div>
+
+				<div class="three">
+					<div class="step">
+						<span class="micro">Step 01</span>
+						<h3>Draw or paste a shape</h3>
+						<p>
+							Use the built-in shapes, draw your own, or paste SVG straight out of
+							Figma. The glass takes that outline exactly.
+						</p>
+					</div>
+					<div class="step">
+						<span class="micro">Step 02</span>
+						<h3>Dial in the same numbers</h3>
+						<p>
+							The controls are calibrated against Figma's, so a value copied from
+							the design panel lands on the same result here.
+						</p>
+					</div>
+					<div class="step">
+						<span class="micro">Step 03</span>
+						<h3>Take it to your site</h3>
+						<p>
+							Export the config, or copy a ready-made prompt that carries your
+							settings into your own project.
+						</p>
+					</div>
+				</div>
+
+				<div class="params">
+					<span class="chip">Depth <b>80</b></span>
+					<span class="chip">Dispersion <b>100</b></span>
+					<span class="chip">Frost <b>5</b></span>
+					<span class="chip">Splay <b>0</b></span>
+					<span class="chip">Refraction <b>100</b></span>
+				</div>
+			</div>
+		</section>
+
+		<!-- ================= closing ================= -->
+		<section class="close">
+			<div class="wrap">
+				<span class="micro">Start</span>
+				<h2>See it on your own image.</h2>
+				<p class="sub">Free, no sign-up, runs entirely in your browser.</p>
+				<div class="cta">
+					<a class="btn solid" href="/app.html">Open the editor</a>
+					<a class="btn quiet" href="/guide.html">Read the guide</a>
+				</div>
+
+				<div class="starp">
+					<div class="starp__meter" data-star-meter hidden>
+						<div class="starp__row">
+							<span class="starp__n" data-star-count></span>
+							<span class="starp__of">of 100 stars</span>
+						</div>
+						<div class="starp__rail">
+							<span class="starp__fill" data-star-fill></span>
+						</div>
+					</div>
+					<p class="starp__note">
+						No framework, no dependencies — one WebGL2 shader, built solo
+						over a lot of late nights. It stays free either way. A star is
+						just how I know it was worth it.
+					</p>
+					<a
+						class="btn star"
+						href="https://github.com/Miftahul-Islam-Efaz/LIQUID-GLASS"
+						target="_blank"
+						rel="noopener"
+						aria-label="Star Liquid Glass on GitHub"
+					>
+						<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.6.9-4.8 4.8 1.2 6.8L12 18l-5.9 3.2 1.2-6.8L2.5 9.6l6.6-.9z" /></svg>
+						<span>Star on GitHub</span>
+					</a>
+				</div>
+			</div>
+		</section>
+
+		<footer class="foot">
+			<span>Liquid Glass</span>
+			<a href="/about.html">About the developer</a>
+			<a href="https://github.com/Miftahul-Islam-Efaz" rel="me noopener" target="_blank">GitHub</a>
+			<span class="sp">Miftahul Islam Efaz</span>
+		</footer>
+
+		<script type="module" src="/src/landing.js"></script>
+	</body>
+</html>

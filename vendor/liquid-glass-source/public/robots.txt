@@ -1,0 +1,10 @@
+# Everything here is public and intended to be read, by people and by crawlers.
+User-agent: *
+Allow: /
+
+# /guide.html is the full written documentation as static HTML and needs no
+# JavaScript. Crawlers that do not execute scripts should read that, and
+# /llms.txt, rather than the editor at /, which is a WebGL canvas.
+# /about.html identifies the author.
+
+Sitemap: https://liquidglass.miftahulislamefaz.xyz/sitemap.xml

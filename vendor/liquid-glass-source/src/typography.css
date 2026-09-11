@@ -1,0 +1,80 @@
+/* Bundled UI typeface (Satoshi) + background-upload controls.
+   Loaded after style.css so these rules win. */
+
+@font-face {
+	font-family: 'Satoshi';
+	src: url('./fonts/Satoshi-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Satoshi';
+	src: url('./fonts/Satoshi-Medium.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Satoshi';
+	src: url('./fonts/Satoshi-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+html,
+body,
+button,
+select,
+input,
+output,
+label {
+	font-family: 'Satoshi', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+textarea {
+	font-family: ui-monospace, 'SF Mono', Consolas, 'Liberation Mono', monospace;
+}
+
+.ptitle,
+.grp h2,
+#adv summary {
+	font-weight: 700;
+	letter-spacing: 0;
+}
+
+.slider > span,
+.field > span,
+.hint {
+	font-weight: 500;
+}
+
+/* ---------------- background upload ---------------- */
+input[type='file'] {
+	display: none;
+}
+
+.filebtn {
+	display: grid;
+	place-items: center;
+	height: 26px;
+	margin-bottom: 6px;
+	border: 1px dashed var(--line-2);
+	border-radius: var(--radius);
+	background: var(--panel-2);
+	color: var(--text);
+	cursor: pointer;
+	transition: background 90ms ease, border-color 90ms ease;
+}
+
+.filebtn:hover {
+	background: #454545;
+	border-color: var(--accent);
+}
+
+#stage.dropping {
+	box-shadow: 0 0 0 2px var(--accent), 0 18px 60px rgba(0, 0, 0, 0.55);
+}

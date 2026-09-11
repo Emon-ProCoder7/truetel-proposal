@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Liquid Glass — how to use it, and how to build it into your own site</title>
+		<meta
+			name="description"
+			content="A WebGL2 recreation of Figma's Glass effect: screen-space backdrop refraction, chromatic dispersion and frost. Full algorithm, settings reference, and instructions for reproducing it on your own website."
+		/>
+		<link rel="canonical" href="/guide.html" />
+		<meta property="og:title" content="Liquid Glass — Figma glass effect in WebGL2" />
+		<meta
+			property="og:description"
+			content="How Figma's Glass effect actually works, and how to rebuild it: distance-transform height field, Sobel normals, separated frost and dispersion passes."
+		/>
+		<meta property="og:type" content="article" />
+		<style>
+			:root {
+				color-scheme: dark;
+			}
+			body {
+				margin: 0 auto;
+				padding: 48px 22px 90px;
+				max-width: 760px;
+				background: #1e1e1e;
+				color: #cfcfcf;
+				font: 15px/1.72 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			}
+			h1 {
+				margin: 0 0 6px;
+				font-size: 30px;
+				line-height: 1.2;
+				color: #fff;
+			}
+			.lead {
+				margin: 0 0 34px;
+				font-size: 16px;
+				color: #9d9d9d;
+			}
+			h2 {
+				margin: 40px 0 10px;
+				padding-top: 18px;
+				border-top: 1px solid #333;
+				font-size: 19px;
+				color: #fff;
+			}
+			h3 {
+				margin: 26px 0 6px;
+				font-size: 14px;
+				color: #0d99ff;
+			}
+			a {
+				color: #0d99ff;
+			}
+			code {
+				padding: 1px 5px;
+				background: #2c2c2c;
+				border-radius: 3px;
+				font-size: 13px;
+			}
+			pre {
+				padding: 14px 16px;
+				overflow-x: auto;
+				background: #2c2c2c;
+				border: 1px solid #383838;
+				border-radius: 6px;
+				font-size: 13px;
+				line-height: 1.55;
+			}
+			pre code {
+				padding: 0;
+				background: none;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin: 12px 0;
+				font-size: 14px;
+			}
+			th,
+			td {
+				padding: 7px 10px;
+				text-align: left;
+				border-bottom: 1px solid #333;
+			}
+			th {
+				color: #fff;
+				font-weight: 600;
+			}
+			.note {
+				padding: 12px 15px;
+				background: #2c2c2c;
+				border-left: 3px solid #ffab4a;
+				border-radius: 0 6px 6px 0;
+				color: #b3b3b3;
+			}
+			.back {
+				display: inline-block;
+				margin-bottom: 26px;
+				padding: 8px 15px;
+				background: #0d99ff;
+				border-radius: 5px;
+				color: #fff;
+				text-decoration: none;
+				font-size: 14px;
+			}
+		</style>
+	</head>
+	<body>
+<nav style="margin-bottom:34px;font-size:13px;color:#6f6f6f"><a href="/" style="color:#9d9d9d;text-decoration:none">Liquid Glass</a> &middot; <a href="/about.html" style="color:#9d9d9d;text-decoration:none">About the developer</a></nav>
+		<a class="back" href="/">← Open the editor</a>
+
+		<h1>Liquid Glass</h1>
+		<p class="lead">
+			A WebGL2 recreation of Figma's <strong>Glass</strong> effect. It bends, blurs and
+			colour-splits whatever sits behind a shape, then gives you the exact settings and a
+			ready-made brief for rebuilding the same look on your own website.
+		</p>
+
+		<h2>What this effect actually is</h2>
+		<p>
+			Figma's Glass is a <strong>2D screen-space effect</strong>. There is no 3D geometry, no
+			volume, no light transport and no ray tracing. Everything you see is produced by
+			displacing and colour-splitting the pixels rendered <em>behind</em> the shape.
+		</p>
+		<p>
+			The most useful consequence: <strong>on a flat background the effect is invisible.</strong>
+			Refracting a uniform colour returns that same colour, and splitting it into red, green
+			and blue samples averages straight back to it. The effect only exists where there is
+			detail behind it. If you are testing and seeing nothing, that is why.
+		</p>
+
+		<h2>Using the editor</h2>
+
+		<h3>Pick a shape, or draw one</h3>
+		<p>
+			Use the toolbar under the canvas: choose a shape, then drag on the image to draw it.
+			While dragging it stays a flat silhouette so the outline is easy to judge; the glass is
+			applied when you release. Press <code>V</code> for the move tool, drag inside the shape
+			to reposition, drag a handle to resize, hold <code>Shift</code> to preserve the ratio.
+		</p>
+		<p>
+			Shortcuts: <code>V</code> move, <code>R</code> rectangle, <code>O</code>/<code>E</code>
+			ellipse, <code>L</code> pill, <code>T</code> triangle, <code>P</code> pentagon,
+			<code>S</code> star. <code>Ctrl+Z</code> and <code>Ctrl+Shift+Z</code> undo and redo
+			everything, including shape edits.
+		</p>
+
+		<h3>Bring your own artwork</h3>
+		<p>
+			<strong>Background</strong> swaps the photo behind the glass — you can also drop an image
+			onto the canvas or paste one with <code>Ctrl+V</code>.
+			<strong>Paste shape</strong> accepts SVG from Figma: right-click your vector,
+			<strong>Copy as SVG</strong>, paste it in, and the glass adopts that outline.
+		</p>
+
+		<h3>Presets</h3>
+		<p>
+			Seven starting points in the left rail: Figma default, Frosted card, Prism, Water
+			droplet, Subtle UI glass, Reading lens, Smoked glass. They change the glass and solver
+			settings only — your shape, size and background are untouched, so you can audition
+			looks without losing work.
+		</p>
+
+		<h2>Settings reference</h2>
+		<table>
+			<thead>
+				<tr><th>Setting</th><th>What it does</th></tr>
+			</thead>
+			<tbody>
+				<tr><td>Refraction</td><td>How far the glass displaces the backdrop. The main bend.</td></tr>
+				<tr><td>Depth</td><td>Width of the rounded rim inward from the outline.</td></tr>
+				<tr><td>Dispersion</td><td>Rainbow fringing. A rim effect — never appears in the centre.</td></tr>
+				<tr><td>Frost</td><td>Isotropic blur of the backdrop. Should add no colour at all.</td></tr>
+				<tr><td>Splay</td><td>Spread of the projected light lobe.</td></tr>
+				<tr><td>Light</td><td>Angle and intensity of the specular pass. 0% disables it.</td></tr>
+			</tbody>
+		</table>
+		<p>
+			<strong>Solver internals</strong> are the shader's own units: rim falloff, normal gain,
+			chroma restore, spectral spread, height-field smoothing. Rim falloff, chroma and
+			spectral spread are the three that decide whether the result reads as real glass.
+		</p>
+
+		<h2>The algorithm</h2>
+		<p>Reproduce these stages in order.</p>
+		<ol>
+			<li>Rasterise the shape path into a coverage mask.</li>
+			<li>
+				Build a height field: a Euclidean distance transform of the mask, mapped to a
+				rounded rim profile — <code>t = min(dist / depth, 1)</code>, then
+				<code>height = sqrt(1 - (1-t)^2)</code>. Blur it slightly or the shape's medial axis
+				creases visibly.
+			</li>
+			<li>
+				Take the surface normal from a 3×3 Sobel gradient of that field, and soft-limit the
+				slope so thin features cannot spike:
+				<code>scale = lim * tanh(gm/lim) / gm</code> with <code>lim ≈ 1.35</code>. Use
+				<code>tanh</code> rather than <code>clamp</code> — it is smooth, so no new hard edge
+				appears where the limit engages.
+			</li>
+			<li>Refraction: offset the backdrop lookup by <code>normal.xy * refraction</code>.</li>
+			<li>
+				Frost and dispersion as <strong>two separate accumulations</strong> (see below), blended
+				by the rim mask.
+			</li>
+			<li>
+				Restore chroma: spectral averaging pulls toward grey, so keep the integrated luminance
+				and scale only the colour difference from it.
+			</li>
+			<li>Composite over the backdrop using the coverage mask.</li>
+		</ol>
+
+		<h3>The mistake worth avoiding</h3>
+		<p>
+			Do not compute frost and dispersion in one sampling loop. If the same index drives both
+			the blur ring and the wavelength weight, every frost sample is tinted, so raising frost
+			paints concentric rainbow rings across the interior instead of softening it. They are
+			independent operations:
+		</p>
+		<pre><code>// frost: untinted, isotropic, pre-filtered
+for (i) {
+  angle  = i * 2.39996;              // golden angle: no spokes
+  offset = vec2(cos, sin) * radius * sqrt(t);
+  blur  += textureLod(bg, p + d + offset, lod);
+}
+
+// dispersion: spectral, along the gradient, no frost offset
+for (i) {
+  wt   = spectralWeight(t);          // gaussians at 0.0 / 0.5 / 1.0
+  num += wt * texture(bg, p + d + dir * (w * (t*2-1)));
+}
+
+col = mix(blur / n, num / den, rimMask);</code></pre>
+		<p>
+			Two details make a sparse blur look smooth: <strong>golden-angle</strong> sample
+			placement, so taps never line up into spokes, and reading from a
+			<strong>mipmap level matched to the tap spacing</strong>, so each tap already carries the
+			average of the gap to its neighbours. Without the mip, point samples leave visible
+			ghosts no matter how you arrange them. Never use per-pixel dithering to hide this — it
+			trades banding for visible grain.
+		</p>
+		<p>
+			One more: a wide dispersion band needs a high sample count, 24 or more. Band width and
+			tap count must move together, or the spectral integral quantises into hard steps.
+		</p>
+
+		<h2>Putting it on your own site</h2>
+		<p>
+			In the editor, click <strong>Copy prompt</strong> in the left rail. You get a complete
+			brief — the pipeline above, every current setting, the solver internals as JSON, and
+			your shape's SVG path and viewBox. Paste it into any AI coding assistant and you get a
+			working component back. <strong>Save / load settings</strong> in the header gives you the
+			same numbers as plain JSON to keep or share.
+		</p>
+		<p class="note">
+			The one real constraint: this effect needs a <strong>backdrop texture</strong>. Browsers
+			cannot read live page pixels from a shader, so you must supply the backdrop yourself —
+			an image, a video frame, or a rasterised snapshot of the DOM behind the element. Plan
+			for that before committing to glass over arbitrary scrolling content.
+		</p>
+
+		<h2>Performance notes</h2>
+		<ul>
+			<li>The height field is cached and only rebuilt when the shape or depth changes.</li>
+			<li>Sample count drops during drags and returns to full quality on release.</li>
+			<li>The glass pass is scissored to the shape's padded bounding rect.</li>
+			<li>Device pixel ratio is capped, and the distance-transform resolution is bounded.</li>
+		</ul>
+	</body>
+</html>

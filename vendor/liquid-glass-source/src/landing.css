@@ -1,0 +1,1826 @@
+/* Landing page only. The editor's stylesheets are NOT imported here, so the
+   global `button { height: 26px }` in style.css cannot reach this page.
+   Every <button> below still declares its own height and min-height: 0.
+
+   Restraint model taken from the taste reference:
+   - two colours only (obsidian / soft concrete); colour comes from the video
+   - hairlines at 6% and 20% white, never a glowing border
+   - display type large, light, tight, negative tracking
+   - micro labels small, uppercase, positive tracking
+   - one shared easing curve, long durations                                */
+
+@font-face {
+	font-family: 'LigaFlow';
+	src: url('./fonts/LigaFlow-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Tanker';
+	src: url('./fonts/Tanker-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Excon';
+	src: url('./fonts/Excon-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Excon';
+	src: url('./fonts/Excon-Medium.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+
+:root {
+	--obsidian: #0b0b0b;
+	--concrete: #f1f1f1;
+	--concrete-60: hsla(0, 0%, 95%, 0.6);
+	--concrete-40: hsla(0, 0%, 95%, 0.4);
+	--concrete-20: hsla(0, 0%, 95%, 0.2);
+	--concrete-6: hsla(0, 0%, 95%, 0.06);
+
+	--display: 'LigaFlow', 'Clash Display', system-ui, sans-serif;
+	--label: 'Tanker', 'Clash Display', system-ui, sans-serif;
+	--text: 'Excon', 'Satoshi', system-ui, sans-serif;
+
+	--ease: cubic-bezier(0.83, 0, 0.17, 1);
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+	/* Glass parameters. A preset rewrites all eight of these on ONE component,
+	   not on the cell, so two pieces of glass sitting side by side can run
+	   completely different numbers. */
+	--g-blur: 16px;
+	--g-sat: 120%;
+	--g-bright: 1.02;
+	--g-fill: hsla(0, 0%, 95%, 0.04);
+	--g-edge: hsla(0, 0%, 95%, 0.2);
+	--g-hi: hsla(0, 0%, 100%, 0.1);
+	--g-ring: 0px;
+	--g-inner: hsla(0, 0%, 100%, 0);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	/* Lenis owns scroll animation now; native smooth scroll fights it. */
+	scroll-behavior: auto;
+}
+
+body {
+	margin: 0;
+	background: var(--obsidian);
+	color: var(--concrete);
+	font-family: var(--text);
+	font-size: 16px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	overflow-x: hidden;
+	overflow-x: clip;
+}
+
+a {
+	color: inherit;
+}
+
+:focus-visible {
+	outline: 1px solid var(--concrete);
+	outline-offset: 3px;
+}
+
+.micro {
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+	line-height: 1;
+}
+
+/* ---------- full-bleed video backdrop ---------- */
+
+.bleed {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	overflow: clip;
+}
+
+.vid {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	z-index: -2;
+	opacity: 0;
+	transition: opacity 0.8s var(--ease);
+	/* Own compositor layer: keeps video repaints off the main document. */
+	transform: translateZ(0);
+}
+.vid.ready {
+	opacity: 1;
+}
+
+.veil {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+
+.veil.hero {
+	background:
+		radial-gradient(100% 72% at 50% 46%, hsla(0, 0%, 4%, 0.1), hsla(0, 0%, 4%, 0.74) 78%),
+		linear-gradient(to bottom, hsla(0, 0%, 4%, 0.7), hsla(0, 0%, 4%, 0.02) 32%, var(--obsidian));
+}
+
+/* Lighter than the hero veil on purpose: the presets differ mostly in how much
+   colour and detail they pull out of the backdrop, and a heavy scrim flattens
+   all of them into the same grey. */
+.veil.show {
+	background:
+		linear-gradient(to bottom, var(--obsidian), hsla(0, 0%, 4%, 0.4) 20%, hsla(0, 0%, 4%, 0.4) 80%, var(--obsidian));
+}
+
+/* ---------- nav ----------
+   A rule over the hero, a floating capsule once you scroll. Nothing here is
+   coloured: hierarchy comes from value (one inverted pill) and from type
+   (micro labels, not body text), which is what stops it reading generic. */
+
+.nav {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 60;
+	display: flex;
+	justify-content: center;
+	padding: 1.25rem 1.5rem;
+	transition: padding 0.9s var(--ease);
+}
+
+.nav__inner {
+	position: relative;
+	width: 100%;
+	max-width: 1560px;
+	display: flex;
+	align-items: center;
+	gap: 2.5rem;
+	padding: 0.75rem 0.75rem 0.75rem 1.375rem;
+	border: 1px solid transparent;
+	border-radius: 0;
+	transition: max-width 0.9s var(--ease), border-radius 0.9s var(--ease),
+		background 0.7s var(--ease), border-color 0.7s var(--ease), padding 0.9s var(--ease);
+}
+
+/* Only frosts once the page has scrolled: over the hero there is nothing to
+   separate from, and an always-on blur is a permanent compositing cost. */
+.nav.stuck {
+	padding-top: 0.75rem;
+	padding-bottom: 0.75rem;
+}
+.nav.stuck .nav__inner {
+	max-width: 1180px;
+	border-radius: 62.4375rem;
+	padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+	background: hsla(0, 0%, 4%, 0.55);
+	border-color: var(--concrete-6);
+	-webkit-backdrop-filter: blur(16px) saturate(130%);
+	backdrop-filter: blur(16px) saturate(130%);
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	text-decoration: none;
+	margin-right: auto;
+}
+.brand__logo {
+	display: block;
+	flex: none;
+	width: 1.375rem;
+	height: 1.375rem;
+	border-radius: 0.3125rem;
+}
+.brand__name {
+	font-family: var(--label);
+	font-size: 0.8125rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--concrete);
+}
+.brand__rule {
+	width: 1px;
+	height: 0.875rem;
+	background: var(--concrete-20);
+}
+.brand__meta {
+	font-family: var(--label);
+	font-size: 0.6875rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+}
+
+.nav__links {
+	display: flex;
+	align-items: center;
+	gap: 2rem;
+}
+
+/* Micro labels, not sentence-case body text: same voice as the specimen
+   labels further down the page. */
+.navlink {
+	position: relative;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	padding: 0.5rem 0;
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+	text-decoration: none;
+	transition: color 0.6s var(--ease);
+}
+.navlink i {
+	font-style: normal;
+	font-size: 0.625rem;
+	letter-spacing: 0.08em;
+	color: var(--concrete-20);
+	font-variant-numeric: tabular-nums;
+	transition: color 0.6s var(--ease);
+}
+.navlink::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 1px;
+	background: var(--concrete-20);
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	transition: transform 0.8s var(--ease);
+}
+.navlink:hover {
+	color: var(--concrete);
+}
+.navlink:hover i {
+	color: var(--concrete-40);
+}
+.navlink:hover::after {
+	transform: scaleX(1);
+}
+
+/* The single inversion on the page. */
+.navcta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.625rem;
+	height: 2.75rem;
+	padding: 0 1.25rem;
+	border-radius: 62.4375rem;
+	background: var(--concrete);
+	color: var(--obsidian);
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	text-decoration: none;
+	transition: opacity 0.6s var(--ease), transform 0.4s var(--ease-out);
+}
+.navcta svg {
+	width: 0.625rem;
+	height: 0.625rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.4;
+	transition: transform 0.8s var(--ease);
+}
+.navcta:hover {
+	opacity: 0.84;
+}
+.navcta:hover svg {
+	transform: translate(2px, -2px);
+}
+.navcta:active {
+	transform: scale(0.97);
+}
+
+/* Scroll position as a hairline, not a coloured bar. */
+.nav__prog {
+	position: absolute;
+	left: 1.5rem;
+	right: 1.5rem;
+	bottom: 0;
+	height: 1px;
+	background: var(--concrete-20);
+	transform: scaleX(var(--p, 0));
+	transform-origin: 0 50%;
+	opacity: 0;
+	transition: opacity 0.6s var(--ease);
+}
+.nav.stuck .nav__prog {
+	opacity: 1;
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+	min-height: 100svh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 8rem 1.5rem 5rem;
+}
+
+h1 {
+	font-family: var(--display);
+	font-weight: 400;
+	font-size: clamp(3.25rem, 9vw, 8.25rem);
+	line-height: 0.86;
+	letter-spacing: -0.035em;
+	margin: 0 0 2rem;
+	max-width: 16ch;
+}
+
+.sub {
+	font-size: clamp(0.95rem, 1.3vw, 1.0625rem);
+	line-height: 1.62;
+	color: var(--concrete-60);
+	margin: 0 auto 2.75rem;
+	max-width: 46ch;
+}
+
+.cta {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+/* ---------- the glass material ---------- */
+
+.glass {
+	position: relative;
+	background: var(--g-fill);
+	border: 1px solid var(--g-edge);
+	transition: background 0.6s var(--ease), border-color 0.6s var(--ease),
+		transform 0.4s var(--ease-out);
+}
+
+/* Blur is attached ONLY while the board is on screen (see .live below).
+   A permanently-live backdrop-filter forces the compositor to re-filter the
+   region on every video frame even when scrolled far away, which was the
+   single largest cost on this page. */
+.live .glass {
+	-webkit-backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat)) brightness(var(--g-bright));
+	backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat)) brightness(var(--g-bright));
+}
+
+/* Top-edge sheen. */
+.glass::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: linear-gradient(to bottom, var(--g-hi), hsla(0, 0%, 100%, 0) 42%);
+	pointer-events: none;
+}
+
+/* Inner rim. This is what separates a thick droplet edge from a razor lens
+   edge — border alone cannot express rim thickness without changing layout. */
+.glass::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow: inset 0 0 0 var(--g-ring) var(--g-inner);
+	pointer-events: none;
+}
+
+/* ---------- presets ----------
+   Names and values mirror GLASS_PRESETS in the editor. Applied per COMPONENT,
+   so a cell can hold a prism pill next to a smoked disc. */
+
+/* Mirrors the supplied config exactly: frost 5 (near-zero haze),
+   dispersion 100 (max colour split), depth 80 (thick rim),
+   lightIntensity 0 (no added brightness). */
+[data-preset='figma'] {
+	--g-blur: 5px;
+	--g-sat: 215%;
+	--g-bright: 1.02;
+	--g-fill: hsla(0, 0%, 95%, 0.04);
+	--g-edge: hsla(0, 0%, 95%, 0.3);
+	--g-hi: hsla(0, 0%, 100%, 0.12);
+	--g-ring: 2px;
+	--g-inner: hsla(0, 0%, 100%, 0.18);
+}
+
+[data-preset='frosted'] {
+	--g-blur: 40px;
+	--g-sat: 100%;
+	--g-bright: 1.12;
+	--g-fill: hsla(0, 0%, 95%, 0.12);
+	--g-edge: hsla(0, 0%, 95%, 0.22);
+	--g-hi: hsla(0, 0%, 100%, 0.16);
+	--g-ring: 1px;
+	--g-inner: hsla(0, 0%, 100%, 0.12);
+}
+
+[data-preset='prism'] {
+	--g-blur: 2px;
+	--g-sat: 300%;
+	--g-bright: 1.06;
+	--g-fill: hsla(0, 0%, 95%, 0.02);
+	--g-edge: hsla(0, 0%, 95%, 0.3);
+	--g-hi: hsla(0, 0%, 100%, 0.18);
+	--g-ring: 1.5px;
+	--g-inner: hsla(0, 0%, 100%, 0.16);
+}
+
+[data-preset='droplet'] {
+	--g-blur: 6px;
+	--g-sat: 170%;
+	--g-bright: 1.06;
+	--g-fill: hsla(0, 0%, 95%, 0.04);
+	--g-edge: hsla(0, 0%, 95%, 0.4);
+	--g-hi: hsla(0, 0%, 100%, 0.28);
+	--g-ring: 3px;
+	--g-inner: hsla(0, 0%, 100%, 0.26);
+}
+
+[data-preset='subtle'] {
+	--g-blur: 14px;
+	--g-sat: 105%;
+	--g-bright: 0.98;
+	--g-fill: hsla(0, 0%, 95%, 0.05);
+	--g-edge: hsla(0, 0%, 95%, 0.1);
+	--g-hi: hsla(0, 0%, 100%, 0.05);
+	--g-ring: 0px;
+	--g-inner: hsla(0, 0%, 100%, 0);
+}
+
+[data-preset='lens'] {
+	--g-blur: 0px;
+	--g-sat: 200%;
+	--g-bright: 1.14;
+	--g-fill: hsla(0, 0%, 95%, 0.015);
+	--g-edge: hsla(0, 0%, 95%, 0.34);
+	--g-hi: hsla(0, 0%, 100%, 0.1);
+	--g-ring: 1px;
+	--g-inner: hsla(0, 0%, 100%, 0.22);
+}
+
+[data-preset='smoke'] {
+	--g-blur: 26px;
+	--g-sat: 45%;
+	--g-bright: 0.55;
+	--g-fill: hsla(0, 0%, 4%, 0.5);
+	--g-edge: hsla(0, 0%, 95%, 0.12);
+	--g-hi: hsla(0, 0%, 100%, 0.04);
+	--g-ring: 0px;
+	--g-inner: hsla(0, 0%, 100%, 0);
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	height: 3rem;
+	min-height: 0;
+	padding: 0 1.75rem;
+	border: 1px solid var(--concrete-20);
+	border-radius: 62.4375rem;
+	background: transparent;
+	display: inline-flex;
+	align-items: center;
+	cursor: pointer;
+	color: var(--concrete);
+	text-decoration: none;
+	transition: background 0.6s var(--ease), color 0.6s var(--ease),
+		border-color 0.6s var(--ease), transform 0.4s var(--ease-out);
+}
+.btn:hover {
+	background: var(--concrete-6);
+	border-color: var(--concrete-40);
+}
+.btn:active {
+	transform: scale(0.97);
+}
+
+.btn.solid {
+	background: var(--concrete);
+	border-color: var(--concrete);
+	color: var(--obsidian);
+}
+.btn.solid:hover {
+	background: #fff;
+	border-color: #fff;
+}
+
+.btn.quiet {
+	border-color: transparent;
+	color: var(--concrete-40);
+}
+.btn.quiet:hover {
+	color: var(--concrete);
+	background: transparent;
+	border-color: var(--concrete-20);
+}
+
+/* ---------- showcase ---------- */
+
+.show {
+	padding: 7.5rem 2.5rem 8rem;
+}
+
+.wrap {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.head {
+	max-width: 40ch;
+	margin: 0 0 3rem;
+}
+
+.head .micro {
+	display: block;
+	margin-bottom: 1.5rem;
+}
+
+h2 {
+	font-family: var(--display);
+	font-weight: 400;
+	font-size: clamp(2.25rem, 5vw, 4rem);
+	line-height: 0.9;
+	letter-spacing: -0.03em;
+	margin: 0 0 1rem;
+}
+
+.lead {
+	font-size: 1rem;
+	line-height: 1.62;
+	color: var(--concrete-60);
+	margin: 0;
+}
+
+/* Specimen grid. The 1px gap over a 6% background is the hairline rule
+   between cells — no borders, no cards-with-shadows. */
+.board {
+	display: grid;
+	grid-template-columns: repeat(12, 1fr);
+	gap: 1px;
+	background: var(--concrete-6);
+	border: 1px solid var(--concrete-6);
+}
+
+.spec {
+	background: transparent;
+	padding: 2rem 1.75rem 2.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.75rem;
+	min-height: 19rem;
+	/* NOTE: `paint` is deliberately absent. contain: paint makes the element a
+	   backdrop root, which empties the backdrop for every backdrop-filter
+	   inside it — that is why all seven presets previously rendered as the
+	   same flat panel. layout + style still isolate the cell's reflow work. */
+	contain: layout style;
+}
+
+.spec__head {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+}
+
+.spec__no {
+	font-family: var(--label);
+	font-size: 0.6875rem;
+	letter-spacing: 0.1em;
+	color: var(--concrete-20);
+	font-variant-numeric: tabular-nums;
+	padding-top: 0.2rem;
+	line-height: 1;
+}
+
+.spec__name {
+	font-family: var(--label);
+	font-weight: 400;
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete);
+	line-height: 1;
+	margin: 0 0 0.5rem;
+}
+
+.spec__note {
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	color: var(--concrete-40);
+	margin: 0;
+	max-width: 34ch;
+}
+
+.spec__stage {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Component + the name of the preset it is running. */
+.item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+}
+.item.wide {
+	width: 100%;
+	align-items: flex-end;
+}
+.tag {
+	font-family: var(--label);
+	font-size: 0.625rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--concrete-20);
+	line-height: 1;
+	transition: color 0.6s var(--ease);
+}
+.item:hover .tag {
+	color: var(--concrete-40);
+}
+
+.s-4 {
+	grid-column: span 4;
+}
+.s-5 {
+	grid-column: span 5;
+}
+.s-6 {
+	grid-column: span 6;
+}
+.s-7 {
+	grid-column: span 7;
+}
+.s-8 {
+	grid-column: span 8;
+}
+.s-12 {
+	grid-column: span 12;
+}
+
+/* A soft outer tray, one hairline weaker than the component it holds. */
+.tray {
+	padding: 0.75rem;
+	border-radius: 62.4375rem;
+	border: 1px solid var(--concrete-6);
+	background: hsla(0, 0%, 95%, 0.02);
+}
+
+.cluster {
+	display: flex;
+	align-items: flex-start;
+	gap: 1.5rem;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+/* ---------- the sliding selection indicator ----------
+   Injected by landing.js into any container carrying data-seg. Moving one
+   element is a single composited transform; animating each item's own
+   background would repaint every item on every change. */
+.ind {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 0;
+	pointer-events: none;
+	background: var(--concrete);
+	border-radius: 62.4375rem;
+	transition: transform 0.55s var(--ease-out), width 0.55s var(--ease-out),
+		height 0.55s var(--ease-out);
+	will-change: transform;
+}
+.cmd__menu .ind {
+	background: var(--concrete-6);
+	border-radius: 0.5rem;
+}
+
+/* 01 — side navigation rail */
+.rail {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.75rem;
+	border-radius: 62.4375rem;
+}
+.rail__i {
+	position: relative;
+	z-index: 1;
+	width: 3rem;
+	height: 3rem;
+	min-height: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--concrete-40);
+	display: grid;
+	place-items: center;
+	cursor: pointer;
+	transition: color 0.45s var(--ease-out), transform 0.4s var(--ease-out);
+}
+.rail__i svg {
+	width: 1.125rem;
+	height: 1.125rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.3;
+	transition: transform 0.5s var(--ease-out);
+}
+.rail__i:hover {
+	color: var(--concrete);
+}
+.rail__i:hover svg {
+	transform: scale(1.12);
+}
+.rail__i:active {
+	transform: scale(0.9);
+}
+.rail__i.is-on {
+	color: var(--obsidian);
+}
+
+/* 02 — command palette */
+.cmd {
+	width: 100%;
+	max-width: 27rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+.cmd__bar {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	height: 3rem;
+	min-height: 0;
+	padding: 0 1rem;
+	border-radius: 62.4375rem;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.cmd__bar svg {
+	width: 1rem;
+	height: 1rem;
+	fill: none;
+	stroke: var(--concrete-40);
+	stroke-width: 1.3;
+	transition: stroke 0.5s var(--ease-out);
+}
+.cmd__bar:hover svg {
+	stroke: var(--concrete);
+}
+.cmd__bar > span {
+	font-size: 0.875rem;
+	color: var(--concrete-40);
+}
+.cmd__bar:active {
+	transform: scale(0.99);
+}
+.cmd__kbd {
+	margin-left: auto;
+	font-family: var(--label);
+	font-size: 0.625rem;
+	letter-spacing: 0.1em;
+	color: var(--concrete-20);
+}
+
+/* The menu is a real disclosure: collapsed until the bar is pressed. */
+.cmd__pop {
+	opacity: 0;
+	transform: translateY(-0.5rem) scale(0.985);
+	transform-origin: 50% 0;
+	pointer-events: none;
+	transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out);
+}
+.cmd.is-open .cmd__pop {
+	opacity: 1;
+	transform: none;
+	pointer-events: auto;
+}
+
+.cmd__menu {
+	width: 100%;
+	border-radius: 0.875rem;
+	padding: 0.375rem;
+}
+.cmd__row {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	height: 2.5rem;
+	min-height: 0;
+	padding: 0 0.75rem;
+	border: 0;
+	background: transparent;
+	border-radius: 0.5rem;
+	font-family: var(--text);
+	font-size: 0.875rem;
+	text-align: left;
+	color: var(--concrete-60);
+	cursor: pointer;
+	transition: color 0.45s var(--ease-out), padding-left 0.45s var(--ease-out);
+}
+.cmd__row svg {
+	width: 0.9375rem;
+	height: 0.9375rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.3;
+	flex: none;
+}
+.cmd__row i {
+	margin-left: auto;
+	font-style: normal;
+	font-family: var(--label);
+	font-size: 0.625rem;
+	letter-spacing: 0.1em;
+	color: var(--concrete-20);
+}
+.cmd__row:hover,
+.cmd__row.is-on {
+	color: var(--concrete);
+}
+.cmd__row:hover {
+	padding-left: 1rem;
+}
+
+/* 03 — AI mode pill + icon button */
+.aipill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.625rem;
+	height: 3rem;
+	min-height: 0;
+	padding: 0 1.25rem;
+	border-radius: 62.4375rem;
+	color: var(--concrete);
+	font-family: var(--label);
+	font-size: 0.8125rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+.aipill svg {
+	width: 1.0625rem;
+	height: 1.0625rem;
+	fill: currentColor;
+	transition: transform 0.7s var(--ease-out);
+}
+.aipill:hover svg {
+	transform: rotate(90deg);
+}
+.aipill:active {
+	transform: scale(0.96);
+}
+/* Pressed state inverts, which is the only value change allowed on this page. */
+.aipill[aria-pressed='true'] {
+	background: var(--concrete);
+	border-color: var(--concrete);
+	color: var(--obsidian);
+}
+.aipill[aria-pressed='true'] svg {
+	transform: rotate(180deg);
+}
+
+.disc {
+	width: 3.5rem;
+	height: 3.5rem;
+	min-height: 0;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	cursor: pointer;
+	padding: 0;
+	color: inherit;
+}
+.disc svg {
+	width: 1.125rem;
+	height: 1.125rem;
+	stroke: var(--concrete);
+	stroke-width: 1.25;
+	fill: none;
+	transition: transform 0.55s var(--ease-out);
+}
+.disc:hover svg {
+	transform: translateY(-3px);
+}
+.disc:active {
+	transform: scale(0.92);
+}
+/* Fires after the click, so the arrow leaves before the page moves. */
+.disc.sent svg {
+	transform: translateY(-1.5rem);
+	opacity: 0;
+	transition: transform 0.4s var(--ease), opacity 0.3s linear;
+}
+
+/* 04 — agents pill with orb */
+.agents__wrap {
+	position: relative;
+}
+.agents {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	height: 3.5rem;
+	min-height: 0;
+	padding: 0.3125rem 1.25rem 0.3125rem 0.3125rem;
+	border-radius: 62.4375rem;
+	color: inherit;
+	cursor: pointer;
+}
+.agents:active {
+	transform: scale(0.97);
+}
+.orb {
+	width: 2.875rem;
+	height: 2.875rem;
+	border-radius: 50%;
+	flex: none;
+	background: radial-gradient(130% 130% at 30% 24%, #ffffff 0%, #d6d6d6 42%, #8f8f8f 100%);
+	transition: transform 0.8s var(--ease-out);
+}
+.agents:hover .orb {
+	transform: rotate(35deg) scale(1.04);
+}
+.agents__label {
+	font-size: 0.9375rem;
+	color: var(--concrete);
+}
+.agents__chev {
+	width: 0.875rem;
+	height: 0.875rem;
+	fill: none;
+	stroke: var(--concrete-40);
+	stroke-width: 1.4;
+	transition: transform 0.5s var(--ease-out), stroke 0.5s var(--ease-out);
+}
+.agents[aria-expanded='true'] .agents__chev {
+	transform: rotate(180deg);
+	stroke: var(--concrete);
+}
+
+.agents__pop {
+	position: absolute;
+	top: calc(100% + 0.5rem);
+	left: 0.75rem;
+	right: 0.75rem;
+	z-index: 5;
+	display: flex;
+	flex-direction: column;
+	padding: 0.375rem;
+	border-radius: 0.875rem;
+	opacity: 0;
+	transform: translateY(-0.5rem) scale(0.98);
+	transform-origin: 50% 0;
+	pointer-events: none;
+	transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+}
+.agents__wrap.is-open .agents__pop {
+	opacity: 1;
+	transform: none;
+	pointer-events: auto;
+}
+.pop__row {
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--concrete-60);
+	transition: background 0.4s var(--ease-out), color 0.4s var(--ease-out);
+}
+.pop__row:hover {
+	background: var(--concrete-6);
+	color: var(--concrete);
+}
+
+/* 05 — segmented navbar strip */
+.strip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.125rem;
+	height: 3.25rem;
+	padding: 0 0.375rem 0 1.125rem;
+	border-radius: 62.4375rem;
+}
+.strip__brand {
+	position: relative;
+	z-index: 1;
+	font-family: var(--label);
+	font-size: 0.6875rem;
+	letter-spacing: 0.14em;
+	color: var(--concrete);
+	margin-right: 0.875rem;
+}
+.strip__i {
+	position: relative;
+	z-index: 1;
+	border: 0;
+	background: transparent;
+	font-family: var(--label);
+	font-size: 0.6875rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+	height: 2.25rem;
+	min-height: 0;
+	padding: 0 0.875rem;
+	border-radius: 62.4375rem;
+	cursor: pointer;
+	transition: color 0.45s var(--ease-out), transform 0.4s var(--ease-out);
+}
+.strip__i:hover {
+	color: var(--concrete);
+}
+.strip__i:active {
+	transform: scale(0.95);
+}
+.strip__i.is-on {
+	color: var(--obsidian);
+}
+
+/* 06 — control panel: toggle + slider */
+.panel {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 1.75rem;
+}
+.panel__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.25rem;
+}
+.panel__row.col {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 1rem;
+}
+
+.toggle {
+	width: 6.5rem;
+	height: 3.25rem;
+	border-radius: 62.4375rem;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	padding: 0.3125rem;
+	cursor: pointer;
+	flex: none;
+}
+.toggle:active {
+	transform: scale(0.97);
+}
+.knob {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	background: var(--concrete-40);
+	/* Overshoots very slightly, which is what makes a switch feel physical. */
+	transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s var(--ease-out);
+}
+.toggle[aria-checked='true'] .knob {
+	transform: translateX(3.25rem);
+	background: var(--concrete);
+}
+
+.slider {
+	width: 100%;
+	height: 1.5rem;
+	border-radius: 62.4375rem;
+	position: relative;
+	display: flex;
+	align-items: center;
+	--val: 58%;
+	cursor: ew-resize;
+	touch-action: none;
+}
+.fill {
+	position: absolute;
+	left: 0.25rem;
+	right: calc(100% - var(--val));
+	height: 0.5rem;
+	border-radius: 62.4375rem;
+	background: var(--concrete-20);
+}
+.thumb {
+	position: absolute;
+	left: var(--val);
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	transform: translateX(-50%);
+	background: var(--concrete);
+	transition: box-shadow 0.4s var(--ease-out);
+}
+.slider:hover .thumb,
+.slider:focus-visible .thumb {
+	box-shadow: 0 0 0 0.375rem hsla(0, 0%, 95%, 0.12);
+}
+/* Only while the value is being set by keyboard — dragging must track the
+   pointer exactly, with no easing lag. */
+.slider.anim .fill,
+.slider.anim .thumb {
+	transition: right 0.35s var(--ease-out), left 0.35s var(--ease-out),
+		box-shadow 0.4s var(--ease-out);
+}
+
+/* 07 — content card */
+.card {
+	border-radius: 0.5rem;
+	padding: 1.75rem 1.75rem 1.5rem;
+	width: 100%;
+}
+.card h4 {
+	font-family: var(--display);
+	font-weight: 400;
+	font-size: 1.75rem;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	margin: 0 0 0.75rem;
+}
+.card p {
+	font-size: 0.9375rem;
+	line-height: 1.6;
+	color: var(--concrete-60);
+	margin: 0;
+}
+.card__foot {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-top: 1.5rem;
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--concrete-6);
+}
+
+.explore {
+	height: 2.75rem;
+	min-height: 0;
+	border-radius: 62.4375rem;
+	padding: 0 1.5rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: inherit;
+	cursor: pointer;
+}
+.explore svg {
+	width: 0.625rem;
+	height: 0.625rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.4;
+	transition: transform 0.55s var(--ease-out);
+}
+.explore:hover svg {
+	transform: translateY(3px);
+}
+.explore:active {
+	transform: scale(0.96);
+}
+
+/* ---------- how it works ---------- */
+
+.steps {
+	padding: 7.5rem 2.5rem 8rem;
+	border-top: 1px solid var(--concrete-6);
+	background: var(--obsidian);
+	/* Skip layout/paint entirely until scrolled near. */
+	content-visibility: auto;
+	contain-intrinsic-size: auto 900px;
+}
+
+.three {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 2.5rem;
+}
+
+.step {
+	border-top: 1px solid var(--concrete-20);
+	padding-top: 1.25rem;
+}
+
+.step .micro {
+	display: block;
+	margin-bottom: 1.5rem;
+}
+
+.step h3 {
+	font-family: var(--display);
+	font-weight: 400;
+	font-size: 1.5rem;
+	line-height: 1.05;
+	letter-spacing: -0.02em;
+	margin: 0 0 0.625rem;
+}
+
+.step p {
+	font-size: 0.9375rem;
+	line-height: 1.6;
+	color: var(--concrete-60);
+	margin: 0;
+}
+
+.params {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0;
+	margin-top: 4rem;
+	border-top: 1px solid var(--concrete-6);
+}
+
+.chip {
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+	padding: 1rem 1.75rem 1rem 0;
+	font-variant-numeric: tabular-nums;
+}
+.chip b {
+	font-weight: 400;
+	color: var(--concrete);
+}
+
+/* ---------- closing ---------- */
+
+.close {
+	padding: 7.5rem 2.5rem 8rem;
+	border-top: 1px solid var(--concrete-6);
+	content-visibility: auto;
+	contain-intrinsic-size: auto 500px;
+}
+
+.close .wrap {
+	max-width: 40ch;
+}
+
+.close .micro {
+	display: block;
+	margin-bottom: 1.5rem;
+}
+
+.close .sub {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.close .cta {
+	justify-content: flex-start;
+}
+
+/* ---------- footer ---------- */
+
+.foot {
+	border-top: 1px solid var(--concrete-6);
+	padding: 1.75rem 2.5rem 3rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.625rem 1.75rem;
+	align-items: center;
+	font-family: var(--label);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+}
+.foot a {
+	color: var(--concrete-40);
+	text-decoration: none;
+	transition: color 0.6s var(--ease);
+}
+.foot a:hover {
+	color: var(--concrete);
+}
+.foot .sp {
+	margin-left: auto;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1100px) {
+	.navlink i {
+		display: none;
+	}
+	.nav__links {
+		gap: 1.5rem;
+	}
+	.brand__rule,
+	.brand__meta {
+		display: none;
+	}
+}
+
+@media (max-width: 1000px) {
+	.s-4,
+	.s-5,
+	.s-6,
+	.s-7,
+	.s-8 {
+		grid-column: span 6;
+	}
+	.three {
+		grid-template-columns: 1fr;
+		gap: 2rem;
+	}
+}
+
+@media (max-width: 680px) {
+	.nav {
+		padding: 0.75rem 0.75rem;
+	}
+	.nav__inner {
+		gap: 1rem;
+		padding: 0.5rem 0.5rem 0.5rem 1rem;
+	}
+	.navlink.hideSm {
+		display: none;
+	}
+	.nav__prog {
+		left: 0.75rem;
+		right: 0.75rem;
+	}
+	.hero {
+		padding: 6.5rem 1.25rem 4.5rem;
+	}
+	.show,
+	.steps,
+	.close {
+		padding-left: 1.25rem;
+		padding-right: 1.25rem;
+	}
+	.show {
+		padding-top: 5rem;
+		padding-bottom: 5.5rem;
+	}
+	.head {
+		margin-bottom: 2rem;
+	}
+	.s-4,
+	.s-5,
+	.s-6,
+	.s-7,
+	.s-8,
+	.s-12 {
+		grid-column: span 12;
+	}
+	.spec {
+		padding: 1.75rem 1.25rem 2.25rem;
+		min-height: 0;
+	}
+	.cta {
+		flex-direction: column;
+		width: 100%;
+	}
+	.btn {
+		width: 100%;
+		justify-content: center;
+	}
+	.foot {
+		padding: 1.75rem 1.25rem 2.5rem;
+	}
+	.foot .sp {
+		margin-left: 0;
+	}
+}
+
+/* Weak GPU / few cores: blur is the expensive part, so cap its radius rather
+   than dropping the effect. Presets still differ in saturation, brightness,
+   fill and rim, so the comparison survives. Applied by landing.js. */
+.lite [data-preset='frosted'],
+.lite [data-preset='smoke'] {
+	--g-blur: 10px;
+}
+.lite [data-preset='figma'],
+.lite [data-preset='subtle'] {
+	--g-blur: 6px;
+}
+.lite .nav.stuck .nav__inner {
+	-webkit-backdrop-filter: blur(6px) saturate(120%);
+	backdrop-filter: blur(6px) saturate(120%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	.glass {
+		background: hsla(0, 0%, 7%, 0.85);
+	}
+	.nav.stuck .nav__inner {
+		background: hsla(0, 0%, 4%, 0.92);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	.btn,
+	.vid,
+	.navlink,
+	.navlink::after,
+	.navcta,
+	.navcta svg,
+	.nav__inner,
+	.nav__prog,
+	.foot a,
+	.knob,
+	.orb,
+	.agents__chev,
+	.agents__pop,
+	.cmd__pop,
+	.cmd__bar svg,
+	.rail__i,
+	.rail__i svg,
+	.cmd__row,
+	.strip__i,
+	.pop__row,
+	.ind,
+	.tag,
+	.thumb,
+	.explore svg,
+	.aipill svg,
+	.disc svg,
+	.nav,
+	.glass {
+		transition: none;
+	}
+	.rail__i:hover svg,
+	.aipill:hover svg,
+	.agents:hover .orb {
+		transform: none;
+	}
+}
+
+/* ---------- backdrop scaling ----------
+   The showcase board is far taller than 16:9. object-fit: cover has to
+   satisfy the larger ratio, so a 1920x1080 file covering a ~2000px-tall
+   section gets scaled ~1.85x and you only see the middle 40% of it.
+   Fix: the video only ever covers one viewport, and sticks while the
+   section scrolls past. Scale factor goes back to ~1, so no crop. */
+
+.bleed__bg {
+	position: absolute;
+	inset: 0;
+	z-index: -2;
+	pointer-events: none;
+}
+
+.show .vid {
+	position: sticky;
+	/* inset: 0 would pin all four edges and defeat sticky. */
+	inset: 0 0 auto 0;
+	height: 100vh;
+	width: 100%;
+	z-index: auto;
+}
+
+/* ---------- preset variants ----------
+   Beyond the editor’s seven. Twelve components need twelve recipes, and
+   every one of these stays inside the silver / black / white range: they
+   differ by blur, saturation, brightness and rim, never by hue. */
+
+/* Heavy haze, lifted — a menu that sits above its trigger. */
+[data-preset='vapour'] {
+	--g-blur: 34px;
+	--g-sat: 130%;
+	--g-bright: 1.16;
+	--g-fill: hsla(0, 0%, 95%, 0.07);
+	--g-edge: hsla(0, 0%, 95%, 0.16);
+	--g-hi: hsla(0, 0%, 100%, 0.22);
+	--g-ring: 0px;
+	--g-inner: hsla(0, 0%, 100%, 0);
+}
+
+/* Liquid metal: high saturation, thick bright rim, little haze. */
+[data-preset='mercury'] {
+	--g-blur: 8px;
+	--g-sat: 240%;
+	--g-bright: 1.08;
+	--g-fill: hsla(0, 0%, 95%, 0.06);
+	--g-edge: hsla(0, 0%, 95%, 0.46);
+	--g-hi: hsla(0, 0%, 100%, 0.32);
+	--g-ring: 2px;
+	--g-inner: hsla(0, 0%, 100%, 0.34);
+}
+
+/* Cut crystal: almost no blur, bright and crisp, hairline rim. */
+[data-preset='crystal'] {
+	--g-blur: 1px;
+	--g-sat: 150%;
+	--g-bright: 1.18;
+	--g-fill: hsla(0, 0%, 95%, 0.015);
+	--g-edge: hsla(0, 0%, 95%, 0.26);
+	--g-hi: hsla(0, 0%, 100%, 0.07);
+	--g-ring: 1px;
+	--g-inner: hsla(0, 0%, 100%, 0.18);
+}
+
+/* Darkest tint on the board — deeper than smoke, colour pulled further. */
+[data-preset='onyx'] {
+	--g-blur: 32px;
+	--g-sat: 60%;
+	--g-bright: 0.62;
+	--g-fill: hsla(0, 0%, 4%, 0.56);
+	--g-edge: hsla(0, 0%, 95%, 0.1);
+	--g-hi: hsla(0, 0%, 100%, 0.03);
+	--g-ring: 0px;
+	--g-inner: hsla(0, 0%, 100%, 0);
+}
+
+/* Nearly no fill, all edge: reads as an outline of light. */
+[data-preset='halo'] {
+	--g-blur: 12px;
+	--g-sat: 115%;
+	--g-bright: 1;
+	--g-fill: hsla(0, 0%, 95%, 0.02);
+	--g-edge: hsla(0, 0%, 95%, 0.5);
+	--g-hi: hsla(0, 0%, 100%, 0.12);
+	--g-ring: 1px;
+	--g-inner: hsla(0, 0%, 100%, 0.4);
+}
+
+/* ---------- load reveal ----------
+   Everything is gated behind .js-anim, which only the inline head script
+   adds. No JS means nothing is ever hidden, so the page can never get
+   stuck invisible. The transition lives on the REVEALED state only, so
+   there is no reverse animation to fight on the way in. */
+
+.boot {
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	background: var(--obsidian);
+	pointer-events: none;
+	opacity: 1;
+	transition: opacity 0.9s var(--ease-out);
+}
+
+html:not(.js-anim) .boot {
+	display: none;
+}
+
+.js-anim.revealed .boot {
+	opacity: 0;
+}
+
+/* A hairline that breathes while loading. Cheaper than a spinner and it
+   matches the rules used elsewhere on the page. */
+.boot::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 140px;
+	height: 1px;
+	margin: -1px 0 0 -70px;
+	background: var(--concrete-20);
+	transform-origin: 50% 50%;
+	animation: boot-line 1.4s var(--ease) infinite;
+}
+
+.js-anim.revealed .boot::after {
+	animation: none;
+	opacity: 0;
+}
+
+@keyframes boot-line {
+	0% {
+		transform: scaleX(0.08);
+		opacity: 0.3;
+	}
+	50% {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+	100% {
+		transform: scaleX(0.08);
+		opacity: 0.3;
+	}
+}
+
+.js-anim [data-reveal] {
+	opacity: 0;
+	transform: translate3d(0, 18px, 0);
+}
+
+/* Nav drops in from above instead of rising. */
+.js-anim .nav[data-reveal] {
+	transform: translate3d(0, -14px, 0);
+}
+
+.js-anim.revealed [data-reveal] {
+	opacity: 1;
+	transform: none;
+	transition:
+		opacity 0.8s var(--ease-out),
+		transform 1s var(--ease-out);
+	/* Curtain covers the first 350ms, so the stagger starts behind it. */
+	transition-delay: calc(0.35s + var(--i, 0) * 0.11s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.boot::after {
+		animation: none;
+	}
+	.js-anim [data-reveal],
+	.js-anim .nav[data-reveal] {
+		transform: none;
+	}
+	.js-anim.revealed [data-reveal] {
+		transition-duration: 0.2s;
+		transition-delay: 0s;
+	}
+}
+
+/* ---------- Lenis ---------- */
+
+html.lenis,
+html.lenis body {
+	height: auto;
+}
+
+.lenis.lenis-smooth {
+	scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+	overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+	overflow: hidden;
+}
+
+.lenis.lenis-scrolling [data-lenis-prevent-touch] {
+	overscroll-behavior: contain;
+}
+
+/* ---------- github star cta ---------- */
+
+/* Inherits everything from .btn so it sits in the existing hero row as a
+   peer of solid/quiet - same height, radius, casing and easing. */
+.btn.star {
+	gap: 0.625rem;
+	padding: 0 1.5rem;
+}
+.btn.star svg {
+	width: 0.875rem;
+	height: 0.875rem;
+	flex: none;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+	transition: fill 0.4s var(--ease);
+}
+/* The outline fills on hover - the whole ask, in one gesture. */
+.btn.star:hover svg {
+	fill: currentColor;
+}
+
+/* Count sits behind a hairline divider. Stays empty (and hidden) unless the
+   GitHub API answers, so a failed fetch leaves no gap. */
+.btn__n {
+	font-variant-numeric: tabular-nums;
+	margin-left: 0.125rem;
+	padding-left: 0.625rem;
+	border-left: 1px solid var(--concrete-20);
+	color: var(--concrete-40);
+	transition: color 0.6s var(--ease);
+}
+.btn.star:hover .btn__n {
+	color: var(--concrete);
+}
+
+.thanks {
+	margin-top: 1.25rem;
+	max-width: 42ch;
+	font-family: var(--text);
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	text-align: center;
+	color: var(--concrete-40);
+}
+
+/* ---------- star goal panel ---------- */
+
+.starp {
+	margin-top: 3.5rem;
+	padding-top: 2.5rem;
+	border-top: 1px solid var(--concrete-6);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.25rem;
+}
+
+.starp__meter {
+	width: 100%;
+	max-width: 22rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+}
+/* An author-level display value outranks the UA [hidden] rule, so the
+   attribute has to be honoured explicitly or the meter shows before the
+   count arrives. */
+.starp__meter[hidden] {
+	display: none;
+}
+
+.starp__row {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+.starp__n {
+	font-family: var(--display);
+	font-size: 2rem;
+	line-height: 1;
+	color: var(--concrete);
+	font-variant-numeric: tabular-nums;
+}
+.starp__of {
+	font-family: var(--label);
+	font-size: 0.6875rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--concrete-40);
+}
+
+.starp__rail {
+	width: 100%;
+	height: 2px;
+	background: var(--concrete-6);
+	border-radius: 62.4375rem;
+	overflow: hidden;
+}
+.starp__fill {
+	display: block;
+	width: 0;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--concrete);
+	transition: width 1.4s var(--ease-out);
+}
+
+.starp__note {
+	max-width: 46ch;
+	font-family: var(--text);
+	font-size: 0.8125rem;
+	line-height: 1.6;
+	text-align: center;
+	color: var(--concrete-40);
+}

@@ -1,0 +1,461 @@
+/* Left rail, preset flyout, and the guide overlay.
+   Uses the tokens from style.css so this stays in the Figma palette.
+
+   The app chrome runs at 11px because it is a dense tool panel. This modal is
+   read once by a first-time visitor, so it deliberately breaks that scale:
+   larger type, wider line-height, far more whitespace.
+
+   IMPORTANT: style.css sets a global `button { height: 26px }` for the
+   inspector's dense controls. Every button in here is taller and/or
+   multi-line, so each one must reset height explicitly or its content is
+   clamped to 26px and spills out over whatever follows. */
+
+/* ---------------- shared: quiet, rounded scrollbars ---------------- */
+/* The native scrollbar has square corners and stepper arrows on Windows, which
+   reads as cheap next to the rest of the chrome. */
+.lg-sheet,
+.lg-plist {
+	scrollbar-width: thin;
+	scrollbar-color: #555 transparent;
+}
+.lg-sheet::-webkit-scrollbar,
+.lg-plist::-webkit-scrollbar {
+	width: 10px;
+}
+.lg-sheet::-webkit-scrollbar-track,
+.lg-plist::-webkit-scrollbar-track {
+	background: transparent;
+}
+.lg-sheet::-webkit-scrollbar-thumb,
+.lg-plist::-webkit-scrollbar-thumb {
+	/* Transparent border + background-clip insets the thumb, so it reads as a
+	   floating rounded pill rather than a full-width bar. */
+	border: 3px solid transparent;
+	border-radius: 6px;
+	background: #555;
+	background-clip: content-box;
+}
+.lg-sheet::-webkit-scrollbar-thumb:hover,
+.lg-plist::-webkit-scrollbar-thumb:hover {
+	background: #6b6b6b;
+	background-clip: content-box;
+}
+/* Kill the up/down stepper arrows. */
+.lg-sheet::-webkit-scrollbar-button,
+.lg-plist::-webkit-scrollbar-button {
+	display: none;
+	height: 0;
+	width: 0;
+}
+.lg-sheet::-webkit-scrollbar-corner,
+.lg-plist::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+/* ---------------- left rail ---------------- */
+.lg-rail {
+	position: fixed;
+	left: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	z-index: 60;
+}
+
+.lg-railbtn {
+	width: 56px;
+	/* Overrides the global 26px. */
+	height: 56px;
+	min-height: 56px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	background: var(--panel);
+	border: 1px solid var(--line-2);
+	border-radius: 8px;
+	color: var(--text-2);
+	font: inherit;
+	font-size: 9px;
+	line-height: 1.1;
+	text-align: center;
+	cursor: pointer;
+	transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.lg-railbtn svg {
+	width: 17px;
+	height: 17px;
+}
+.lg-railbtn:hover {
+	background: var(--panel-2);
+	color: var(--text);
+}
+.lg-railbtn.on {
+	border-color: var(--accent);
+	background: var(--accent-soft);
+	color: var(--text);
+}
+.lg-railbtn.ok {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+/* ---------------- preset flyout ---------------- */
+.lg-flyout {
+	position: fixed;
+	left: 78px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 276px;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--panel);
+	border: 1px solid var(--line-2);
+	border-radius: 10px;
+	box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+	z-index: 61;
+	animation: lg-slide 0.14s ease-out;
+}
+.lg-flyout[hidden] {
+	display: none;
+}
+@keyframes lg-slide {
+	from {
+		opacity: 0;
+		transform: translateY(-50%) translateX(-6px);
+	}
+}
+
+.lg-flyhead {
+	flex: none;
+	padding: 13px 15px 11px;
+	border-bottom: 1px solid var(--line);
+}
+.lg-flyhead h3 {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--text);
+}
+.lg-flyhead p {
+	margin: 3px 0 0;
+	font-size: 11px;
+	line-height: 1.5;
+	color: var(--text-3);
+}
+
+.lg-plist {
+	flex: 1 1 auto;
+	padding: 7px;
+	overflow-y: auto;
+}
+
+.lg-preset {
+	display: grid;
+	grid-template-columns: 1fr 12px;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	/* Critical: the global rule clamps this to 26px, which is shorter than a
+	   name plus a note, so the note escapes the button and lands on the row
+	   below. Content decides the height here. */
+	height: auto;
+	min-height: 0;
+	padding: 8px 10px;
+	text-align: left;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 7px;
+	color: var(--text);
+	font: inherit;
+	cursor: pointer;
+	transition: background 0.1s, border-color 0.1s;
+}
+.lg-preset + .lg-preset {
+	margin-top: 1px;
+}
+.lg-preset:hover {
+	background: var(--panel-2);
+}
+.lg-preset.sel {
+	border-color: var(--accent);
+	background: var(--accent-soft);
+}
+
+/* Name and note share one column, so a note cannot detach from its name. */
+.lg-ptext {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+.lg-pname {
+	font-size: 12.5px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.35;
+	color: var(--text);
+}
+.lg-pnote {
+	font-size: 10.5px;
+	font-weight: 400;
+	line-height: 1.4;
+	color: var(--text-3);
+}
+.lg-preset:hover .lg-pnote,
+.lg-preset.sel .lg-pnote {
+	color: var(--text-2);
+}
+
+.lg-pgo {
+	display: grid;
+	place-items: center;
+	color: var(--text-3);
+	opacity: 0;
+	transition: opacity 0.1s, transform 0.1s;
+	transform: translateX(-2px);
+}
+.lg-pgo svg {
+	width: 12px;
+	height: 12px;
+}
+.lg-preset:hover .lg-pgo,
+.lg-preset.sel .lg-pgo {
+	opacity: 1;
+	transform: none;
+}
+.lg-preset.sel .lg-pgo {
+	color: var(--accent);
+}
+
+/* ---------------- guide overlay ---------------- */
+.lg-overlay {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	background: rgba(0, 0, 0, 0.66);
+	backdrop-filter: blur(3px);
+	z-index: 200;
+}
+.lg-overlay[hidden] {
+	display: none;
+}
+
+.lg-sheet {
+	position: relative;
+	width: 100%;
+	max-width: 430px;
+	max-height: 88vh;
+	overflow-y: auto;
+	background: var(--panel);
+	border: 1px solid var(--line-2);
+	border-radius: 12px;
+	box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
+	animation: lg-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+@keyframes lg-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.98);
+	}
+}
+
+.lg-x {
+	position: absolute;
+	top: 11px;
+	right: 13px;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	width: 27px;
+	height: 27px;
+	min-height: 27px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: 6px;
+	color: var(--text-3);
+	cursor: pointer;
+}
+.lg-x svg {
+	width: 14px;
+	height: 14px;
+}
+.lg-x:hover {
+	background: var(--panel-2);
+	color: var(--text);
+}
+
+.lg-body {
+	padding: 30px 30px 6px;
+}
+
+.lg-eyebrow {
+	margin: 0 0 9px;
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.lg-body h2 {
+	margin: 0 0 26px;
+	font-size: 25px;
+	font-weight: 700;
+	/* Tight tracking and leading: display type, not body type. */
+	letter-spacing: -0.025em;
+	line-height: 1.16;
+	color: #fff;
+}
+
+.lg-steps {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.lg-steps li {
+	display: grid;
+	grid-template-columns: 22px 1fr;
+	gap: 12px;
+	margin-bottom: 17px;
+}
+.lg-num {
+	display: grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	margin-top: 1px;
+	background: var(--panel-2);
+	border-radius: 50%;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-2);
+	/* Tabular figures keep the numerals optically centred. */
+	font-variant-numeric: tabular-nums;
+}
+.lg-steps b {
+	display: block;
+	margin-bottom: 2px;
+	font-size: 13.5px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--text);
+}
+.lg-steps p {
+	margin: 0;
+	font-size: 12.5px;
+	line-height: 1.55;
+	color: var(--text-2);
+	/* ~48 characters per line, comfortably inside the readable range. */
+	max-width: 33ch;
+}
+.lg-steps p b {
+	display: inline;
+	margin: 0;
+	font-size: inherit;
+	color: var(--text);
+}
+
+.lg-note {
+	margin: 22px 0 0;
+	padding: 11px 13px;
+	background: var(--panel-2);
+	border-radius: 7px;
+	font-size: 12px;
+	line-height: 1.55;
+	color: var(--text-3);
+}
+
+.lg-foot {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	position: sticky;
+	bottom: 0;
+	padding: 18px 30px 22px;
+	background: linear-gradient(to bottom, rgba(44, 44, 44, 0), var(--panel) 45%);
+}
+.lg-spacer {
+	flex: 1 1 auto;
+}
+
+.lg-link {
+	font-size: 12px;
+	color: var(--text-3);
+	text-decoration: none;
+}
+.lg-link:hover {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
+/* Primary action. Height must be explicit for the same reason as above. */
+.lg-cta {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 34px;
+	min-height: 34px;
+	padding: 0 18px;
+	background: var(--accent);
+	border: 1px solid var(--accent);
+	border-radius: 7px;
+	color: #fff;
+	font: inherit;
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: filter 0.12s, background 0.12s;
+}
+.lg-cta:hover {
+	filter: brightness(1.1);
+}
+.lg-cta.ok {
+	background: transparent;
+	color: var(--accent);
+}
+
+/* Off-screen helper used only when the clipboard API is unavailable. */
+.lg-fallback {
+	position: fixed;
+	left: -9999px;
+	top: 0;
+	opacity: 0;
+}
+
+@media (max-width: 860px) {
+	.lg-rail {
+		left: 8px;
+		gap: 4px;
+	}
+	.lg-railbtn {
+		width: 46px;
+		height: 46px;
+		min-height: 46px;
+		font-size: 8px;
+	}
+	.lg-flyout {
+		left: 60px;
+		width: 244px;
+	}
+	.lg-body {
+		padding: 26px 22px 4px;
+	}
+	.lg-body h2 {
+		font-size: 21px;
+	}
+	.lg-foot {
+		padding: 16px 22px 18px;
+	}
+}

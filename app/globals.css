@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/* ============================================================
+   TrueTel — Cloud Phone Proposal Engine
+   Tokens matched to the live managed-it.truetel.com.au system:
+   white/light base, lime accent, near-black cards, Plus Jakarta
+   Sans, tight display tracking. Built mobile-first — this is a
+   tool reps use standing in a client's office, not a desk app.
+   ============================================================ */
+
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f2f2f2;
+  --bg-dark: #131313;
+  --bg-dark-soft: #1d1d1d;
+
+  --ink: #000000;
+  --ink-secondary: #585858;
+  --ink-faint: #8a8a8a;
+
+  --line: #efeff2;
+  --line-strong: #c7c7c7;
+
+  --accent: #d6fd70;
+  --accent-bright: #ebf213;
+  --accent-ink: #14210a;
+
+  --on-dark: #ffffff;
+  --on-dark-secondary: rgba(255, 255, 255, 0.7);
+  --on-dark-line: rgba(255, 255, 255, 0.14);
+
+  --glass-tint: 255, 255, 255;
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-shadow: rgba(20, 20, 20, 0.14);
+
+  --radius-sm: 4px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-bg-dark: var(--bg-dark);
+  --color-bg-dark-soft: var(--bg-dark-soft);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+
+  --font-display: var(--font-jakarta);
+  --font-sans: var(--font-jakarta);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { border-color: var(--line); }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  overflow-x: clip;
+}
+
+::selection { background: rgba(214, 253, 112, 0.55); color: #000; }
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ============================================================ Typography */
+
+.text-display-hero { font-weight: 500; letter-spacing: -0.045em; line-height: 1.05; }
+.text-display-lg { font-weight: 500; letter-spacing: -0.035em; line-height: 1.1; }
+.text-display-md { font-weight: 500; letter-spacing: -0.02em; line-height: 1.2; }
+.text-num { font-variant-numeric: tabular-nums; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.eyebrow::before { content: ""; width: 7px; height: 7px; background: var(--accent-ink); border-radius: 2px; flex-shrink: 0; }
+.eyebrow.on-dark { color: var(--on-dark-secondary); }
+.eyebrow.on-dark::before { background: var(--accent); }
+
+/* ============================================================ Glass system
+   Backdrop-filter based — deliberately not the WebGL liquid-glass
+   renderer (see /vendor/liquid-glass-source and README). This runs
+   smoothly on every rep's phone with zero GPU-shader risk, which
+   matters more here than an extra millimetre of realism. */
+
+.glass-surface {
+  position: relative;
+  background: rgba(var(--glass-tint), 0.62);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 20px 40px -12px var(--glass-shadow);
+  isolation: isolate;
+}
+.glass-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.8;
+}
+.glass-surface.dark {
+  background: rgba(19, 19, 19, 0.55);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--on-dark);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 20px 40px -12px rgba(0, 0, 0, 0.5);
+}
+.glass-surface.selected {
+  border-color: var(--accent-ink);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 20px 40px -12px var(--glass-shadow);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface { background: rgba(255, 255, 255, 0.92); }
+  .glass-surface.dark { background: rgba(19, 19, 19, 0.92); }
+}
+
+/* Distortion-flavoured highlight sweep — cheap CSS, no shader. */
+.glass-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.glass-sheen::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -30%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: rotate(8deg) translateX(-120%);
+  animation: sheen-sweep 5.5s var(--ease-out-expo) infinite;
+  animation-delay: 1.2s;
+}
+@keyframes sheen-sweep {
+  0%, 60% { transform: rotate(8deg) translateX(-120%); }
+  85%, 100% { transform: rotate(8deg) translateX(220%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-sheen::after { animation: none; display: none; }
+}
+
+/* Ambient mesh backdrop for the hero — pure CSS gradients, zero image weight. */
+.mesh-bg {
+  background-image:
+    radial-gradient(38% 38% at 18% 12%, rgba(214, 253, 112, 0.55), transparent 60%),
+    radial-gradient(46% 46% at 88% 18%, rgba(214, 253, 112, 0.3), transparent 65%),
+    radial-gradient(60% 60% at 50% 100%, rgba(19, 19, 19, 0.06), transparent 70%);
+  background-color: var(--bg);
+}
+
+.tap-target {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}

@@ -1,0 +1,273 @@
+/* Editor chrome: canvas header bar with the paste/upload popovers, custom
+   dropdown, flat draw preview, solver section.
+   Loaded after style.css and typography.css, so it wins. */
+
+/* ---------------- canvas column ---------------- */
+/* #work is a centred flex row in style.css. The header bar is a block above
+   the stage, so the axis has to become vertical or the bar sits BESIDE the
+   canvas and squeezes it to nothing. */
+#work {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+#work > #stage { flex: 0 0 auto; }
+
+/* ---------------- header bar ---------------- */
+#topbar {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 0 10px;
+	padding: 5px 6px;
+	background: var(--panel);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.32);
+	z-index: 30;
+}
+
+#topbar .tbsep {
+	width: 1px;
+	height: 18px;
+	margin: 0 3px;
+	background: var(--line-2);
+	flex: none;
+}
+
+#topbar .tbspacer { flex: 1 1 auto; }
+
+#topbar .tblabel {
+	padding: 0 4px 0 2px;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--text-3);
+	letter-spacing: 0.02em;
+}
+
+/* ---------------- header popovers ---------------- */
+.hgrp { position: relative; flex: none; }
+
+.hbtn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 26px;
+	padding: 0 10px;
+	font: inherit;
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text-2);
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	cursor: pointer;
+	transition: background 90ms ease, color 90ms ease;
+}
+
+.hbtn svg {
+	width: 13px;
+	height: 13px;
+	flex: none;
+}
+
+.hbtn:hover {
+	color: var(--text);
+	background: var(--panel-2);
+}
+
+.hgrp.open .hbtn {
+	color: #fff;
+	background: var(--accent);
+}
+
+.hpop {
+	position: absolute;
+	top: calc(100% + 7px);
+	left: 0;
+	z-index: 60;
+	width: 296px;
+	padding: 12px;
+	background: #252525;
+	border: 1px solid #4a4a4a;
+	border-radius: 9px;
+	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
+	animation: ddin 0.11s ease;
+}
+
+.hpop[hidden] { display: none; }
+
+.hpop h3 {
+	margin: 0 0 9px;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--text);
+}
+
+.hpop textarea {
+	width: 100%;
+	margin: 0 0 7px;
+}
+
+.hpop .row {
+	display: flex;
+	gap: 6px;
+}
+
+.hpop .row > button { flex: 1 1 0; }
+
+.hpop .hint { margin: 8px 0 0; }
+
+/* ---------------- custom dropdown ---------------- */
+.dd { position: relative; }
+
+.ddbtn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	height: 26px;
+	padding: 0 8px;
+	font: inherit;
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--text);
+	background: var(--panel-2);
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	cursor: pointer;
+}
+
+.ddbtn:hover { border-color: var(--line-2); }
+.dd.open .ddbtn { border-color: var(--accent); }
+
+.ddbtn > span {
+	flex: 1 1 auto;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ddcaret {
+	width: 11px;
+	height: 11px;
+	flex: none;
+	color: var(--text-3);
+	transition: transform 0.12s ease;
+}
+
+.dd.open .ddcaret { transform: rotate(180deg); }
+
+.ddmenu {
+	position: absolute;
+	top: calc(100% + 5px);
+	left: 0;
+	right: 0;
+	z-index: 40;
+	padding: 5px;
+	background: #1c1c1c;
+	border: 1px solid #4a4a4a;
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+	animation: ddin 0.1s ease;
+}
+
+.ddmenu[hidden] { display: none; }
+
+@keyframes ddin {
+	from { opacity: 0; transform: translateY(-3px); }
+	to { opacity: 1; transform: none; }
+}
+
+.ddopt {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	height: 27px;
+	padding: 0 9px 0 7px;
+	font: inherit;
+	font-size: 11.5px;
+	color: var(--text);
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+	text-align: left;
+}
+
+.ddopt::before {
+	content: '';
+	width: 10px;
+	height: 10px;
+	flex: none;
+	opacity: 0;
+	background: currentColor;
+	-webkit-mask: no-repeat center / 10px 10px url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M3 8.6l3.4 3.4L13 4.8'/></svg>");
+	mask: no-repeat center / 10px 10px url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M3 8.6l3.4 3.4L13 4.8'/></svg>");
+}
+
+.ddopt.sel::before { opacity: 1; }
+.ddopt:hover { background: var(--accent); color: #fff; }
+
+.ddsep {
+	height: 1px;
+	margin: 5px 3px;
+	background: #3a3a3a;
+}
+
+/* ---------------- flat draw preview ---------------- */
+/* While drawing, the glass pass is off and the shape is a flat fill, so the
+   outline being dragged stays readable. */
+.drawpv {
+	position: absolute;
+	display: none;
+	pointer-events: none;
+	overflow: visible;
+	z-index: 5;
+}
+
+.drawpv.on { display: block; }
+
+.drawpv path {
+	fill: rgba(190, 214, 232, 0.5);
+	stroke: var(--accent);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+/* ---------------- solver internals as a real section ---------------- */
+.grp.solver {
+	background: #262626;
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+}
+
+.grp.solver h2 {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	color: var(--warn);
+}
+
+.grp.solver h2::before {
+	content: '';
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--warn);
+}
+
+/* ---------------- explanatory copy ---------------- */
+.popnote { margin: 0 0 10px; font-size: 11px; line-height: 1.5; color: var(--text-2); }
+.popnote b { color: var(--text); font-weight: 700; }
+.hcaret { width: 10px; height: 10px; flex: none; margin-left: 1px; color: var(--text-3); transition: transform .12s ease; }
+.hgrp.open .hcaret { transform: rotate(180deg); color: #fff; }
+#coach { flex: 0 0 auto; max-width: 1200px; margin: 12px 0 0; padding: 0 4px; font-size: 11.5px; color: var(--text-3); text-align: center; transition: opacity .25s ease; }
+#coach.gone { opacity: 0; pointer-events: none; }
+.grp .hint + .row { margin-top: 2px; }

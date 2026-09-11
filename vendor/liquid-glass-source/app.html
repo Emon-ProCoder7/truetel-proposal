@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Editor — Liquid Glass — Figma’s Liquid Glass Effect in the Browser</title>
+		<meta name="description" content="Get Figma’s exact liquid glass effect in the browser. A free WebGL2 tool for web designers: draw any shape, match Figma’s Depth, Dispersion, Frost and Splay, then copy it into your own website. Works beyond Chromium, unlike CSS backdrop-filter." />
+		
+			<meta name="author" content="Miftahul Islam Efaz" />
+		<link rel="canonical" href="https://liquidglass.miftahulislamefaz.xyz/app.html" />
+    <link rel="icon" href="/Images/favicon-256.png" type="image/png" sizes="256x256" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-180.png" />
+
+		<!-- Static documentation. Crawlers that do not run JavaScript get nothing
+		     useful from the editor itself, which is a WebGL canvas. -->
+		<link rel="alternate" type="text/html" href="/guide.html" title="Documentation" />
+		<link rel="author" href="/about.html" />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Liquid Glass" />
+		<meta property="og:url" content="https://liquidglass.miftahulislamefaz.xyz/app.html" />
+		<meta property="og:title" content="Liquid Glass — Figma's glass effect, in the browser" />
+		<meta
+			property="og:description"
+			content="Draw a shape, match Figma's Depth, Dispersion, Frost and Splay exactly, and copy it into your own site. Real WebGL2 refraction, not a backdrop-filter approximation."
+		/>
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:creator" content="@Miftahul_Islam9" />
+
+		<!-- Two linked entities: the tool, and the person who made it. The author
+		     reference points at the Person defined on /about.html so both pages
+		     describe one identity rather than two unrelated ones. -->
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebApplication",
+				"@id": "https://liquidglass.miftahulislamefaz.xyz/app.html#app",
+				"name": "Liquid Glass",
+				"url": "https://liquidglass.miftahulislamefaz.xyz/app.html",
+				"applicationCategory": "DesignApplication",
+				"operatingSystem": "Any browser with WebGL2",
+				"browserRequirements": "Requires WebGL2",
+				"description": "A browser tool that reproduces Figma's Glass effect exactly — screen-space backdrop refraction, chromatic dispersion and frost, rendered in WebGL2. Draw or paste any shape, tune the same parameters Figma exposes, and export it to your own website.",
+				"offers": {
+					"@type": "Offer",
+					"price": "0",
+					"priceCurrency": "USD"
+				},
+				"featureList": [
+					"Figma-matched glass parameters: Depth, Dispersion, Frost, Splay, Refraction",
+					"Draw rectangles, ellipses, pills, polygons and stars",
+					"Paste SVG path code from Figma as the glass shape",
+					"Custom background images",
+					"Preset glass looks",
+					"Copy a ready-made implementation prompt"
+				],
+				"author": { "@id": "https://liquidglass.miftahulislamefaz.xyz/about.html#person" },
+				"creator": { "@id": "https://liquidglass.miftahulislamefaz.xyz/about.html#person" }
+			}
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "Person",
+				"@id": "https://liquidglass.miftahulislamefaz.xyz/about.html#person",
+				"name": "Miftahul Islam Efaz",
+				"url": "https://liquidglass.miftahulislamefaz.xyz/about.html",
+				"sameAs": [
+					"https://github.com/Miftahul-Islam-Efaz",
+					"https://miftahulislamefaz.xyz/",
+					"https://x.com/Miftahul_Islam9",
+					"https://www.linkedin.com/in/miftahul-islam-efaz-a91373284/"
+				]
+			}
+		</script>
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "FAQPage",
+				"mainEntity": [
+					{
+						"@type": "Question",
+						"name": "Can you get Figma's liquid glass effect in the browser?",
+						"acceptedAnswer": {
+							"@type": "Answer",
+							"text": "Yes, but not with CSS alone. Figma's Glass effect is screen-space backdrop refraction with chromatic dispersion. CSS backdrop-filter cannot displace the backdrop, and the common SVG feDisplacementMap workaround only works in Chromium. This tool renders the effect in WebGL2, so the same Depth, Dispersion and Frost values produce the same result in any browser with WebGL2."
+						}
+					},
+					{
+						"@type": "Question",
+						"name": "Why does the glass look invisible on my background?",
+						"acceptedAnswer": {
+							"@type": "Answer",
+							"text": "Glass refracts whatever is behind it. On a flat, uniform colour a displaced backdrop looks identical to the original, so the effect is invisible. This is true in Figma too. Use a photo or a high-contrast edge behind the shape."
+						}
+					},
+					{
+						"@type": "Question",
+						"name": "Does the liquid glass effect work in Safari and Firefox?",
+						"acceptedAnswer": {
+							"@type": "Answer",
+							"text": "This implementation works in any browser that supports WebGL2, including Safari and Firefox. CSS and SVG filter approaches to liquid glass generally do not, because backdrop-filter ignores SVG displacement filters outside Chromium."
+						}
+					}
+				]
+			}
+		</script>
+		</head>
+	<body>
+		<main id="work">
+			<!-- Header bar: the three input surfaces, each behind a labelled popover.
+			     Every button says what it does; every popover explains it in one line. -->
+			<div id="topbar">
+				<span class="tblabel">Liquid&nbsp;Glass</span>
+				<span class="tbsep"></span>
+
+				<div class="hgrp" id="imgGrp">
+					<button class="hbtn" type="button" data-pop="imgPop"
+						title="Change the photo behind the glass">
+						<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.6"/><path d="M2.6 11l3.2-3.2 2.4 2.4 1.8-1.8L13.4 11"/><circle cx="10.4" cy="5.9" r="1" fill="currentColor" stroke="none"/></svg>
+						Background
+						<svg class="hcaret" viewBox="0 0 16 16"><path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="hpop" id="imgPop" hidden>
+						<h3>Background image</h3>
+						<p class="popnote">The glass refracts whatever sits behind it. Swap in your own photo to test the effect against it.</p>
+						<label class="filebtn" for="bgfile">Choose an image…</label>
+						<input id="bgfile" type="file" accept="image/*" />
+						<button id="bgreset" class="wide">Restore default image</button>
+						<p class="hint" id="bgmsg">You can also drag an image onto the canvas, or paste one with Ctrl+V.</p>
+					</div>
+				</div>
+
+				<div class="hgrp" id="svgGrp">
+					<button class="hbtn" type="button" data-pop="svgPop"
+						title="Paste SVG code from Figma to use as the glass shape">
+						<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.6l5.4 3.1v4.6L8 13.4 2.6 10.3V5.7z"/><path d="M8 8v5.4"/><path d="M2.6 5.7L8 8l5.4-2.3"/></svg>
+						Paste shape
+						<svg class="hcaret" viewBox="0 0 16 16"><path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="hpop" id="svgPop" hidden>
+						<h3>Paste a shape from Figma</h3>
+						<p class="popnote">In Figma: right-click your vector → <b>Copy as SVG</b>, then paste it here. The glass takes that outline.</p>
+						<textarea id="svgin" rows="4" spellcheck="false"
+							placeholder="&lt;svg&gt;…&lt;/svg&gt;   or just a path d"></textarea>
+						<div class="row">
+							<button id="svgapply">Use this shape</button>
+							<button id="svgclear">Clear</button>
+						</div>
+						<p class="hint" id="svgmsg">Pasting into the box applies it right away.</p>
+					</div>
+				</div>
+
+				<div class="hgrp" id="cfgGrp">
+					<button class="hbtn" type="button" data-pop="cfgPop"
+						title="Copy all current settings, or paste settings back in">
+						<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.6h5a1.4 1.4 0 011.4 1.4v8a1.4 1.4 0 01-1.4 1.4h-5A1.4 1.4 0 014.1 12V4a1.4 1.4 0 011.4-1.4z"/><path d="M6.4 5.6h3.2M6.4 8h3.2M6.4 10.4h2"/></svg>
+						Save / load settings
+						<svg class="hcaret" viewBox="0 0 16 16"><path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="hpop" id="cfgPop" hidden>
+						<h3>Save or load settings</h3>
+						<p class="popnote"><b>Copy</b> puts every slider value on your clipboard as text — keep it in a note to come back to this look later. Paste that text here and hit <b>Load</b> to restore it.</p>
+						<textarea id="cfgin" rows="4" spellcheck="false"
+							placeholder="Paste settings text you copied earlier"></textarea>
+						<div class="row">
+							<button id="copy">Copy current</button>
+							<button id="cfgapply">Load</button>
+							<button id="cfgclear">Clear</button>
+						</div>
+						<p class="hint" id="cfgmsg"></p>
+					</div>
+				</div>
+
+				<span class="tbspacer"></span>
+
+				<button id="undo" class="icon" title="Undo  (Ctrl+Z)">
+					<svg viewBox="0 0 16 16"><path d="M3.6 6.4h6.2a3.6 3.6 0 010 7.2H6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M6.2 3.2L3 6.4l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+				<button id="redo" class="icon" title="Redo  (Ctrl+Shift+Z)">
+					<svg viewBox="0 0 16 16"><path d="M12.4 6.4H6.2a3.6 3.6 0 000 7.2H10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9.8 3.2L13 6.4l-3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+			</div>
+
+			<div id="stage">
+				<canvas id="gl"></canvas>
+				<div id="sel"></div>
+			</div>
+
+			<!-- First-run coach line under the canvas. Dismissed on first draw. -->
+			<p id="coach">Pick a shape below and drag on the image to draw it — the glass effect is applied when you let go.</p>
+
+			<!-- Figma-style floating toolbar. Pick a tool, drag on the canvas. -->
+			<div id="toolbar">
+				<button data-tool="move" class="tool active" title="Move / resize the shape  (V)">
+					<svg viewBox="0 0 16 16"><path d="M3 1.5l9.5 5.2-4.1 1.1-1.1 4.1z" /></svg>
+				</button>
+				<span class="tsep"></span>
+				<button data-tool="rect" class="tool" title="Draw a rectangle  (R)">
+					<svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5" /></svg>
+				</button>
+				<button data-tool="pill" class="tool" title="Draw a pill  (L)">
+					<svg viewBox="0 0 16 16"><rect x="2" y="5" width="12" height="6" rx="3" /></svg>
+				</button>
+				<button data-tool="ellipse" class="tool" title="Draw an ellipse  (O)">
+					<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" /></svg>
+				</button>
+				<button data-tool="triangle" class="tool" title="Draw a triangle  (T)">
+					<svg viewBox="0 0 16 16"><path d="M8 2.5l5.5 11h-11z" /></svg>
+				</button>
+				<button data-tool="diamond" class="tool" title="Draw a diamond">
+					<svg viewBox="0 0 16 16"><path d="M8 2l6 6-6 6-6-6z" /></svg>
+				</button>
+				<button data-tool="pentagon" class="tool" title="Draw a pentagon  (P)">
+					<svg viewBox="0 0 16 16"><path d="M8 2l6 4.4-2.3 7.1H4.3L2 6.4z" /></svg>
+				</button>
+				<button data-tool="hexagon" class="tool" title="Draw a hexagon">
+					<svg viewBox="0 0 16 16"><path d="M8 1.8l5.4 3.1v6.2L8 14.2 2.6 11.1V4.9z" /></svg>
+				</button>
+				<button data-tool="star" class="tool" title="Draw a star  (S)">
+					<svg viewBox="0 0 16 16"><path d="M8 1.6l2 4.3 4.6.6-3.4 3.2.9 4.7L8 12.1l-4.1 2.3.9-4.7L1.4 6.5 6 5.9z" /></svg>
+				</button>
+			</div>
+		</main>
+
+		<aside id="panel">
+			<header id="phead">
+				<span class="ptitle">Inspector</span>
+				<span class="pspacer"></span>
+			</header>
+
+			<!-- ---------------- Object ---------------- -->
+			<section class="grp">
+				<h2>Object</h2>
+				<p class="hint">The shape the glass is cut from, and where it sits on the image.</p>
+
+				<div class="row">
+					<div class="dd" id="kindDD">
+						<button class="ddbtn" id="kindBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+							<span id="kindLabel">Figma vector</span>
+							<svg class="ddcaret" viewBox="0 0 16 16"><path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</button>
+						<div class="ddmenu" id="kindMenu" role="listbox" hidden>
+							<button class="ddopt" type="button" role="option" data-kind="figma">Figma vector</button>
+							<div class="ddsep"></div>
+							<button class="ddopt" type="button" role="option" data-kind="rect">Rectangle</button>
+							<button class="ddopt" type="button" role="option" data-kind="pill">Pill</button>
+							<button class="ddopt" type="button" role="option" data-kind="ellipse">Ellipse</button>
+							<button class="ddopt" type="button" role="option" data-kind="triangle">Triangle</button>
+							<button class="ddopt" type="button" role="option" data-kind="diamond">Diamond</button>
+							<button class="ddopt" type="button" role="option" data-kind="pentagon">Pentagon</button>
+							<button class="ddopt" type="button" role="option" data-kind="hexagon">Hexagon</button>
+							<button class="ddopt" type="button" role="option" data-kind="star">Star</button>
+							<div class="ddsep"></div>
+							<button class="ddopt" type="button" role="option" data-kind="custom">Pasted SVG</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="fields">
+					<label class="field" title="Left edge, in image pixels"><span>X</span><input id="g-x" type="number" step="1" /></label>
+					<label class="field" title="Top edge, in image pixels"><span>Y</span><input id="g-y" type="number" step="1" /></label>
+					<label class="field" title="Width"><span>W</span><input id="g-w" type="number" step="1" min="6" /></label>
+					<label class="field" title="Height"><span>H</span><input id="g-h" type="number" step="1" min="6" /></label>
+				</div>
+
+				<label class="slider" id="radiusRow" hidden>
+					<span>Corner radius</span><output id="o-radius"></output>
+					<input id="radius" type="range" min="0" max="120" step="1" value="24" />
+				</label>
+
+				<button id="center" class="wide">Reset position &amp; size</button>
+				<p class="hint">Drag the shape to move it, drag a handle to resize. Hold Shift to keep the ratio; arrow keys nudge.</p>
+			</section>
+
+			<!-- ---------------- Glass ---------------- -->
+			<section class="grp">
+				<h2>Glass</h2>
+				<p class="hint">The same seven controls Figma's glass effect gives you.</p>
+
+				<label class="slider" title="Direction the light comes from"><span>Light angle</span><output id="o-lightAngle"></output>
+					<input id="lightAngle" type="range" min="-180" max="180" step="1" value="-45" /></label>
+
+				<label class="slider" title="Strength of the highlight on the surface"><span>Light intensity</span><output id="o-lightIntensity"></output>
+					<input id="lightIntensity" type="range" min="0" max="100" step="1" value="0" /></label>
+
+				<label class="slider" title="How far the glass bends the image behind it"><span>Refraction</span><output id="o-refraction"></output>
+					<input id="refraction" type="range" min="0" max="100" step="1" value="100" /></label>
+
+				<label class="slider" title="Thickness of the rounded edge around the rim"><span>Depth</span><output id="o-depth"></output>
+					<input id="depth" type="range" min="0" max="100" step="1" value="80" /></label>
+
+				<label class="slider" title="Rainbow colour fringing at the edges"><span>Dispersion</span><output id="o-dispersion"></output>
+					<input id="dispersion" type="range" min="0" max="100" step="1" value="100" /></label>
+
+				<label class="slider" title="Blur, like frosted glass"><span>Frost</span><output id="o-frost"></output>
+					<input id="frost" type="range" min="0" max="100" step="1" value="5" /></label>
+
+				<label class="slider" title="How widely the projected light spreads across the glass. Needs Light intensity above 0 - with no light there is no highlight to spread. Figma defines Splay the same way."><span>Splay</span><span class="dep" data-dep="lightIntensity"></span><output id="o-splay"></output>
+					<input id="splay" type="range" min="0" max="10" step="0.1" value="0" /></label>
+
+				<button id="reset" class="wide">Reset glass to Figma defaults</button>
+			</section>
+
+			<!-- ---------------- Solver internals (always visible) ---------------- -->
+			<section class="grp solver">
+				<h2>Solver internals</h2>
+				<p class="hint">Advanced — the calibration constants Figma keeps hidden. These decide how closely the render matches Figma, so try them before giving up on the Glass sliders above.</p>
+
+				<label class="slider" title="Softens the height field, rounding the rim"><span>Smoothness</span><output id="o-smooth"></output>
+					<input id="smooth" type="range" min="0" max="16" step="0.25" value="4" /></label>
+				<label class="slider" title="How far the bevel reaches inward from the edge. At high values the whole shape becomes a lens instead of a flat pane with a bevelled border."><span>Reach</span><output id="o-reach"></output>
+				<input id="reach" type="range" min="10" max="160" step="0.5" value="42.5" /></label>
+            <label class="slider" title="Rounds off the creases that fan in from the corners once Reach is wide. Blurs the distance field before the rim profile is applied, so the lens becomes a smooth dome instead of a faceted one."><span>Soften</span><output id="o-soften"></output>
+            <input id="soften" type="range" min="0" max="40" step="0.5" value="0" /></label>
+
+				<label class="slider" title="How steeply the surface tilts — drives the whole distortion"><span>Normal gain</span><output id="o-gain"></output>
+					<input id="gain" type="range" min="1" max="600" step="1" value="123" /></label>
+
+				<label class="slider" title="Saturation of the dispersion fringe"><span>Chroma</span><output id="o-chroma"></output>
+					<input id="chroma" type="range" min="0" max="4" step="0.05" value="1" /></label>
+
+				<label class="slider" title="Width of each colour band in the fringe"><span>Spectral spread</span><output id="o-spread"></output>
+					<input id="spread" type="range" min="0.08" max="0.5" step="0.01" value="0.32" /></label>
+
+				<label class="slider" title="How fast the effect fades inward from the edge"><span>Edge falloff</span><output id="o-fall"></output>
+					<input id="fall" type="range" min="0.5" max="4" step="0.1" value="1.5" /></label>
+
+				<label class="slider" title="Darkens steep parts of the rim"><span>Edge darkening</span><output id="o-dark"></output>
+					<input id="dark" type="range" min="0" max="1" step="0.01" value="0" /></label>
+
+				<label class="slider" title="Tint fill over the glass, like Figma's fill opacity"><span>Fill opacity</span><output id="o-tint"></output>
+					<input id="tint" type="range" min="0" max="0.3" step="0.005" value="0.02" /></label>
+
+				<p class="precision" id="precision"></p>
+			</section>
+		</aside>
+
+		<script type="module" src="/src/main.js"></script>
+	</body>
+</html>
