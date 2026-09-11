@@ -177,7 +177,7 @@
         "operation": "send",
         "sendTo": "={{ $json.client.contactEmail }}",
         "subject": "=Your TrueTel Cloud Phone proposal — {{ $json.client.companyName }}",
-        "message": "=<p>Hi {{ $json.client.contactName || 'there' }},</p><p>Please find your TrueTel Cloud Phone proposal attached as a PDF for <strong>{{ $json.client.companyName }}</strong> — ready to review and sign.</p><p>Kind regards,<br>{{ $json.meta.repName }}<br>TrueTel Solutions Pty Ltd<br>1300 70 85 85</p>",
+        "message": "=<p>Hi {{ $json.client.contactName || 'there' }},</p><p>Please find your TrueTel Cloud Phone proposal attached as a PDF for <strong>{{ $json.client.companyName }}</strong> — ready to review and sign.</p><p><strong>To sign:</strong> open the attached PDF and use your PDF viewer's built-in signing tool on the Formal Acceptance page — in Adobe Acrobat Reader (free), click the pen/signature icon in the toolbar and choose \"Fill & Sign\"; on an iPhone/iPad or Mac, open it in Mail or Preview and tap the markup/signature icon. Sign, save, then reply to this email with the signed copy attached.</p><p>Kind regards,<br>{{ $json.meta.repName }}<br>TrueTel Solutions Pty Ltd<br>1300 70 85 85</p>",
         "emailType": "html",
         "options": {
           "attachmentsUi": {
