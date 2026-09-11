@@ -128,7 +128,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const src = $('Prepare Send').item.json;\nconst bin = $input.item.binary;\nconst pdfOk = !!(bin && bin.data);\nreturn [{\n  json: { ...src, pdfOk },\n  binary: pdfOk ? { data: bin.data } : undefined,\n}];"
+        "jsCode": "const src = $('Prepare Send').item.json;\nconst bin = $input.item.binary;\nconst pdfOk = !!(bin && bin.data);\n// CustomJS names the raw response after its own endpoint (\"html2pdf\") — give\n// the attachment a real filename before it reaches Gmail instead.\nconst companySlug = (src.client && src.client.companyName ? src.client.companyName : 'Proposal')\n  .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Proposal';\nconst fileName = `TrueTel-Cloud-Phone-Proposal-${companySlug}.pdf`;\nreturn [{\n  json: { ...src, pdfOk },\n  binary: pdfOk ? { data: { ...bin.data, fileName, fileExtension: 'pdf', mimeType: 'application/pdf' } } : undefined,\n}];"
       },
       "id": "code-check-pdf-result",
       "name": "Check PDF Result",
