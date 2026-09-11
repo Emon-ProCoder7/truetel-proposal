@@ -9,10 +9,30 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const SITE_URL = "https://proposal.truetel.com.au";
+const OG_DESCRIPTION =
+  "TrueTel's internal, mobile-first proposal engine — a complete, branded proposal drafted, priced, and ready to send before you leave the client meeting. Cloud Phone is live now; Managed IT and AI Voice Agent proposals are coming soon.";
+
 export const metadata: Metadata = {
-  title: "TrueTel Cloud Phone Proposal Builder",
-  description: "Internal tool — build and send a Cloud Phone proposal on the spot, in a meeting.",
+  metadataBase: new URL(SITE_URL),
+  title: "TrueTel Proposal Builder",
+  description: OG_DESCRIPTION,
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "TrueTel Proposal Builder",
+    description: OG_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "TrueTel Solutions",
+    type: "website",
+    locale: "en_AU",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "TrueTel Proposal Builder" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TrueTel Proposal Builder",
+    description: OG_DESCRIPTION,
+    images: ["/og-image.png"],
+  },
 };
 
 export const viewport: Viewport = {
