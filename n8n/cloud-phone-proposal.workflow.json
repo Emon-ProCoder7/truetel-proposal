@@ -240,6 +240,233 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, email: $('Prepare Send').item.json.client.contactEmail, name: $('Prepare Send').item.json.client.contactName, companyName: $('Prepare Send').item.json.client.companyName, phone: $('Prepare Send').item.json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
+        "options": {}
+      },
+      "id": "ghl-upsert-contact",
+      "name": "GHL - Upsert Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        1860,
+        200
+      ],
+      "notes": "Click in and add a 'Header Auth' credential (name it 'GHL Private Integration Token', header name Authorization, value 'Bearer <your token>'). Generate the token in GHL: Settings -> Private Integrations -> Create new Integration, with Contacts/Opportunities read+write scopes."
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Prepare Send').item.json;\nconst contact = $json.contact || $json;\nconst contactId = contact.id || contact.contactId || null;\nreturn [{ json: { ...src, ghlContactId: contactId } }];"
+      },
+      "id": "code-ghl-extract-contact-id",
+      "name": "GHL - Extract Contact ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://services.leadconnectorhq.com/opportunities/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "={{ $env.GHL_LOCATION_ID }}"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $json.ghlContactId }}"
+            },
+            {
+              "name": "pipelineId",
+              "value": "={{ $env.GHL_PIPELINE_ID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ghl-search-opportunity",
+      "name": "GHL - Search Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        2340,
+        200
+      ],
+      "notes": "Uses the same GHL credential as 'GHL - Upsert Contact'."
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('GHL - Extract Contact ID').item.json;\nconst list = $json.opportunities || $json.data || (Array.isArray($json) ? $json : []);\nconst openOne = Array.isArray(list) ? (list.find((o) => o.status === 'open') || list[0]) : null;\nreturn [{ json: { ...src, ghlOpportunityId: openOne ? (openOne.id || openOne._id || null) : null } }];"
+      },
+      "id": "code-ghl-check-opportunity-found",
+      "name": "GHL - Check Opportunity Found",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2580,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c-ghl-opp-found",
+              "leftValue": "={{ !!$json.ghlOpportunityId }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-ghl-opportunity-found",
+      "name": "GHL - Opportunity Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/opportunities/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { pipelineId: $env.GHL_PIPELINE_ID, locationId: $env.GHL_LOCATION_ID, name: `Cloud Phone — ${$json.client.companyName}`, status: 'open', contactId: $json.ghlContactId, monetaryValue: $json.pricing.totalIncGst } }}",
+        "options": {}
+      },
+      "id": "ghl-create-opportunity",
+      "name": "GHL - Create Opportunity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        3060,
+        320
+      ],
+      "notes": "Only reached when this contact has no existing open opportunity in the configured pipeline."
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://services.leadconnectorhq.com/opportunities/' + ($json.ghlOpportunityId || $json.id || ($json.opportunity && $json.opportunity.id)) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { pipelineStageId: $env.GHL_PROPOSAL_SENT_STAGE_ID } }}",
+        "options": {}
+      },
+      "id": "ghl-update-stage",
+      "name": "GHL - Update Stage (Proposal Sent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        3300,
+        200
+      ],
+      "notes": "Resolves the opportunity id from either branch above (found via search, or just created). Reads GHL_PROPOSAL_SENT_STAGE_ID from n8n env vars — get this id from GHL: Settings > Pipelines, or the 'Find Pipeline, Stage, and Opportunity IDs' article in GHL's help centre."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://services.leadconnectorhq.com/contacts/' + $('GHL - Extract Contact ID').item.json.ghlContactId + '/notes' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { body: `Cloud Phone proposal sent — $${$('Prepare Send').item.json.pricing.totalIncGst.toFixed(2)}/mo inc GST, ${$('Prepare Send').item.json.pricing.contractTermMonths}-month term. Sent via the Proposal Builder portal.` } }}",
+        "options": {}
+      },
+      "id": "ghl-add-note",
+      "name": "GHL - Add Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        3540,
+        200
+      ],
+      "notes": "Text-only note (no PDF attachment) per team decision — the real PDF lives in the Gmail thread."
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -514,7 +741,7 @@
       "main": [
         [
           {
-            "node": "Multi-Site — FYI Notify?",
+            "node": "GHL - Upsert Contact",
             "type": "main",
             "index": 0
           }
@@ -525,7 +752,7 @@
       "main": [
         [
           {
-            "node": "Multi-Site — FYI Notify?",
+            "node": "GHL - Upsert Contact",
             "type": "main",
             "index": 0
           }
@@ -533,6 +760,101 @@
       ]
     },
     "Gmail - Send Quote Email": {
+      "main": [
+        [
+          {
+            "node": "GHL - Upsert Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Upsert Contact": {
+      "main": [
+        [
+          {
+            "node": "GHL - Extract Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Extract Contact ID": {
+      "main": [
+        [
+          {
+            "node": "GHL - Search Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Search Opportunity": {
+      "main": [
+        [
+          {
+            "node": "GHL - Check Opportunity Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Check Opportunity Found": {
+      "main": [
+        [
+          {
+            "node": "GHL - Opportunity Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Opportunity Found?": {
+      "main": [
+        [
+          {
+            "node": "GHL - Update Stage (Proposal Sent)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GHL - Create Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Create Opportunity": {
+      "main": [
+        [
+          {
+            "node": "GHL - Update Stage (Proposal Sent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Update Stage (Proposal Sent)": {
+      "main": [
+        [
+          {
+            "node": "GHL - Add Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Add Note": {
       "main": [
         [
           {
