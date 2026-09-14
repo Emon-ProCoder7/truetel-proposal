@@ -106,7 +106,7 @@ nobody in between — that's the WYSIWYG guarantee).
 ## The actual n8n workflow
 
 `n8n/cloud-phone-proposal.workflow.json` — in n8n: **⋯ → Import from File**,
-or paste it straight onto the canvas. 20 nodes, two paths off one `If` node
+or paste it straight onto the canvas. 28 nodes, two paths off one `If` node
 keyed on `mode`:
 
 **Generate path** (`mode: "generate"`) — runs for every deal, standard or
@@ -178,13 +178,21 @@ was already approved:
 4. **Gmail - Send Branded Proposal (Fallback, HTML)** — the full `mergedHtml`
    as the email body instead, exactly like before PDF support existed. Only
    reached when `pdfOk` is false.
-5. **Multi-Site — FYI Notify?** — if it was a multi-site deal, an FYI copy
+5. **GHL - Upsert Contact → Extract Contact ID → Search Opportunity → Check
+   Opportunity Found? → Update Stage (Proposal Sent) → Add Note** — every
+   send (any format, standard or multi-site) syncs to GoHighLevel: the
+   client's contact is created or matched by email, their open opportunity
+   in the configured pipeline is found or created, its stage is set to
+   "Proposal Sent", and a note logs the deal total/term. `continueOnFail`
+   is ON for every one of these nodes — a GHL outage never blocks the
+   client's email from going out.
+6. **Multi-Site — FYI Notify?** — if it was a multi-site deal, an FYI copy
    goes to the rep/BDM (`Gmail - Notify BDM (FYI, Sent)`) *after* the client
    already has their proposal — visibility, not a hand-off. Standard deals
    skip straight past this.
-6. **Respond - Sent** acks the portal.
+7. **Respond - Sent** acks the portal.
 
-**Three things to fill in after importing:**
+**Things to fill in after importing:**
 - Attach your **Gmail OAuth2 credential** to the four Gmail nodes.
 - Attach your **OpenAi credential** to the "OpenAI - Draft Narrative & Hero
   Stats" node (its Authentication field is already set to the right type).
@@ -196,6 +204,23 @@ was already approved:
   file** — it would get committed to this public repo. Get a free key at
   [customjs.space](https://www.customjs.space) (no card required, 600
   conversions/month, then $9/mo for 3,000+).
+- Create a **Header Auth** credential named e.g. "GHL Private Integration
+  Token" with header name `Authorization` and value `Bearer <your GHL
+  Private Integration Token>` (GHL → Settings → Private Integrations →
+  Create new Integration, with Contacts + Opportunities read/write scopes),
+  then attach it to all 6 `GHL - *` HTTP Request nodes.
+- Set three environment variables on the n8n instance (or n8n Variables, if
+  your license has that): `GHL_LOCATION_ID`, `GHL_PIPELINE_ID`,
+  `GHL_PROPOSAL_SENT_STAGE_ID`. Find the pipeline/stage ids via GHL's own
+  ["Find Pipeline, Stage, and Opportunity IDs"](https://help.gohighlevel.com/support/solutions/articles/48001160284)
+  help article — no API call needed.
+
+**GHL integration caveat**: the exact endpoints/field names were verified
+against GoHighLevel's live API v2 docs at build time, but this has not yet
+been run against a real GHL account end-to-end — treat the first real test
+send the way the PDF-generation nodes were treated (expect to fix one or two
+field-name/response-shape mismatches once you see real GHL responses, same
+as the "PDF Generated OK?" node needed two passes before it worked).
 
 No Notion writes happen anywhere in this workflow.
 
