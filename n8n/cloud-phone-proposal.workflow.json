@@ -241,7 +241,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "url": "https://services.leadconnectorhq.com/contacts/search",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -255,30 +255,196 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, email: $('Prepare Send').item.json.client.contactEmail, name: $('Prepare Send').item.json.client.contactName, companyName: $('Prepare Send').item.json.client.companyName, phone: $('Prepare Send').item.json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
+        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, filters: [{ field: 'phone', operator: 'eq', value: $('Prepare Send').item.json.client.contactPhone }], pageLimit: 1 } }}",
         "options": {}
       },
-      "id": "ghl-upsert-contact",
-      "name": "GHL - Upsert Contact",
+      "id": "ghl-search-contact-by-phone",
+      "name": "GHL - Search Contact by Phone",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "continueOnFail": true,
       "position": [
         1860,
-        200
+        60
       ],
-      "notes": "Click in and add a 'Header Auth' credential (name it 'GHL Private Integration Token', header name Authorization, value 'Bearer <your token>'). Generate the token in GHL: Settings -> Private Integrations -> Create new Integration, with Contacts/Opportunities read+write scopes."
+      "notes": "Click in and add a 'Header Auth' credential (name it 'GHL Private Integration Token', header name Authorization, value 'Bearer <your token>'). Generate the token in GHL: Settings -> Private Integrations -> Create new Integration, with Contacts/Opportunities read+write scopes. Lookup priority per the team's request: phone first, then email, then create new."
     },
     {
       "parameters": {
-        "jsCode": "const src = $('Prepare Send').item.json;\nconst contact = $json.contact || $json;\nconst contactId = contact.id || contact.contactId || null;\nreturn [{ json: { ...src, ghlContactId: contactId } }];"
+        "jsCode": "const src = $('Prepare Send').item.json;\nconst hasPhone = !!(src.client && src.client.contactPhone && src.client.contactPhone.trim());\nconst list = $json.contacts || $json.data || (Array.isArray($json) ? $json : []);\nconst match = hasPhone && Array.isArray(list) ? list[0] : null;\nreturn [{ json: { ...src, ghlContactId: match ? (match.id || match._id || null) : null } }];"
       },
-      "id": "code-ghl-extract-contact-id",
-      "name": "GHL - Extract Contact ID",
+      "id": "code-ghl-check-found-by-phone",
+      "name": "GHL - Check Found by Phone",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         2100,
+        60
+      ],
+      "notes": "Treats an empty client phone number as 'not found' regardless of what the API returns, so it always falls through to the email search."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c-ghl-found-phone",
+              "leftValue": "={{ !!$json.ghlContactId }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-ghl-found-by-phone",
+      "name": "GHL - Found by Phone?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, filters: [{ field: 'email', operator: 'eq', value: $json.client.contactEmail }], pageLimit: 1 } }}",
+        "options": {}
+      },
+      "id": "ghl-search-contact-by-email",
+      "name": "GHL - Search Contact by Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        2580,
+        180
+      ],
+      "notes": "Only reached when the phone search found nothing (or the client had no phone captured). Uses the same GHL credential as the phone search."
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('GHL - Check Found by Phone').item.json;\nconst list = $json.contacts || $json.data || (Array.isArray($json) ? $json : []);\nconst match = Array.isArray(list) ? list[0] : null;\nreturn [{ json: { ...src, ghlContactId: match ? (match.id || match._id || null) : null } }];"
+      },
+      "id": "code-ghl-check-found-by-email",
+      "name": "GHL - Check Found by Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c-ghl-found-email",
+              "leftValue": "={{ !!$json.ghlContactId }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-ghl-found-by-email",
+      "name": "GHL - Found by Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3060,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "v3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, email: $json.client.contactEmail, name: $json.client.contactName, companyName: $json.client.companyName, phone: $json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
+        "options": {}
+      },
+      "id": "ghl-create-contact",
+      "name": "GHL - Create Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        3300,
+        300
+      ],
+      "notes": "Only reached when neither phone nor email matched an existing GHL contact."
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('GHL - Check Found by Email').item.json;\nconst contact = $json.contact || $json;\nreturn [{ json: { ...src, ghlContactId: contact.id || contact.contactId || null } }];"
+      },
+      "id": "code-ghl-extract-created-contact-id",
+      "name": "GHL - Extract Created Contact ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $json }];"
+      },
+      "id": "code-ghl-contact-resolved",
+      "name": "GHL - Contact Resolved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3780,
         200
       ]
     },
@@ -325,11 +491,11 @@
         2340,
         200
       ],
-      "notes": "Uses the same GHL credential as 'GHL - Upsert Contact'."
+      "notes": "Uses the same GHL credential as the contact-search nodes above."
     },
     {
       "parameters": {
-        "jsCode": "const src = $('GHL - Extract Contact ID').item.json;\nconst list = $json.opportunities || $json.data || (Array.isArray($json) ? $json : []);\nconst openOne = Array.isArray(list) ? (list.find((o) => o.status === 'open') || list[0]) : null;\nreturn [{ json: { ...src, ghlOpportunityId: openOne ? (openOne.id || openOne._id || null) : null } }];"
+        "jsCode": "const src = $('GHL - Contact Resolved').item.json;\nconst list = $json.opportunities || $json.data || (Array.isArray($json) ? $json : []);\nconst openOne = Array.isArray(list) ? (list.find((o) => o.status === 'open') || list[0]) : null;\nreturn [{ json: { ...src, ghlOpportunityId: openOne ? (openOne.id || openOne._id || null) : null } }];"
       },
       "id": "code-ghl-check-opportunity-found",
       "name": "GHL - Check Opportunity Found",
@@ -437,7 +603,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ 'https://services.leadconnectorhq.com/contacts/' + $('GHL - Extract Contact ID').item.json.ghlContactId + '/notes' }}",
+        "url": "={{ 'https://services.leadconnectorhq.com/contacts/' + $('GHL - Contact Resolved').item.json.ghlContactId + '/notes' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -741,7 +907,7 @@
       "main": [
         [
           {
-            "node": "GHL - Upsert Contact",
+            "node": "GHL - Search Contact by Phone",
             "type": "main",
             "index": 0
           }
@@ -752,7 +918,7 @@
       "main": [
         [
           {
-            "node": "GHL - Upsert Contact",
+            "node": "GHL - Search Contact by Phone",
             "type": "main",
             "index": 0
           }
@@ -763,25 +929,116 @@
       "main": [
         [
           {
-            "node": "GHL - Upsert Contact",
+            "node": "GHL - Search Contact by Phone",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "GHL - Upsert Contact": {
+    "GHL - Search Contact by Phone": {
       "main": [
         [
           {
-            "node": "GHL - Extract Contact ID",
+            "node": "GHL - Check Found by Phone",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "GHL - Extract Contact ID": {
+    "GHL - Check Found by Phone": {
+      "main": [
+        [
+          {
+            "node": "GHL - Found by Phone?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Found by Phone?": {
+      "main": [
+        [
+          {
+            "node": "GHL - Contact Resolved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GHL - Search Contact by Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Search Contact by Email": {
+      "main": [
+        [
+          {
+            "node": "GHL - Check Found by Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Check Found by Email": {
+      "main": [
+        [
+          {
+            "node": "GHL - Found by Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Found by Email?": {
+      "main": [
+        [
+          {
+            "node": "GHL - Contact Resolved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GHL - Create Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Create Contact": {
+      "main": [
+        [
+          {
+            "node": "GHL - Extract Created Contact ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Extract Created Contact ID": {
+      "main": [
+        [
+          {
+            "node": "GHL - Contact Resolved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Contact Resolved": {
       "main": [
         [
           {
