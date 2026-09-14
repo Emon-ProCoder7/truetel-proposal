@@ -240,6 +240,20 @@
     },
     {
       "parameters": {
+        "jsCode": "return [{ json: {\n  locationId: \"PASTE_GHL_LOCATION_ID_HERE\", // GHL sub-account (Settings -> Business Info)\n  pipelineId: \"PASTE_GHL_PIPELINE_ID_HERE\", // e.g. the \"01 - BDM - Jack - Felix\" pipeline\n  proposalSentStageId: \"PASTE_PROPOSAL_SENT_STAGE_ID_HERE\", // e.g. \"Proposal Sent - Awaiting Responses\"\n} }];"
+      },
+      "id": "code-ghl-config",
+      "name": "GHL - Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        200
+      ],
+      "notes": "Edit these 3 values directly here for a different pipeline or GHL account — find them via GHL: Settings > Pipelines, or the 'Find Pipeline, Stage, and Opportunity IDs' help article. Placeholders on purpose — real account IDs shouldn't sit in this public repo, even though they're not secrets the way the credential token is."
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "https://services.leadconnectorhq.com/contacts/search",
         "authentication": "genericCredentialType",
@@ -255,7 +269,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), filters: [{ field: 'phone', operator: 'eq', value: $('Prepare Send').item.json.client.contactPhone }], pageLimit: 1 } }}",
+        "jsonBody": "={{ { locationId: $('GHL - Config').item.json.locationId, filters: [{ field: 'phone', operator: 'eq', value: $('Prepare Send').item.json.client.contactPhone }], pageLimit: 1 } }}",
         "options": {}
       },
       "id": "ghl-search-contact-by-phone",
@@ -332,7 +346,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), filters: [{ field: 'email', operator: 'eq', value: $json.client.contactEmail }], pageLimit: 1 } }}",
+        "jsonBody": "={{ { locationId: $('GHL - Config').item.json.locationId, filters: [{ field: 'email', operator: 'eq', value: $json.client.contactEmail }], pageLimit: 1 } }}",
         "options": {}
       },
       "id": "ghl-search-contact-by-email",
@@ -408,7 +422,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), email: $json.client.contactEmail, name: $json.client.contactName, companyName: $json.client.companyName, phone: $json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
+        "jsonBody": "={{ { locationId: $('GHL - Config').item.json.locationId, email: $json.client.contactEmail, name: $json.client.contactName, companyName: $json.client.companyName, phone: $json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
         "options": {}
       },
       "id": "ghl-create-contact",
@@ -468,7 +482,7 @@
           "parameters": [
             {
               "name": "locationId",
-              "value": "={{ ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID) }}"
+              "value": "={{ $('GHL - Config').item.json.locationId }}"
             },
             {
               "name": "contactId",
@@ -476,7 +490,7 @@
             },
             {
               "name": "pipelineId",
-              "value": "={{ ($vars.GHL_PIPELINE_ID || $env.GHL_PIPELINE_ID) }}"
+              "value": "={{ $('GHL - Config').item.json.pipelineId }}"
             }
           ]
         },
@@ -555,7 +569,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { pipelineId: ($vars.GHL_PIPELINE_ID || $env.GHL_PIPELINE_ID), locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), name: `Cloud Phone — ${$json.client.companyName}`, status: 'open', contactId: $json.ghlContactId, monetaryValue: $json.pricing.totalIncGst } }}",
+        "jsonBody": "={{ { pipelineId: $('GHL - Config').item.json.pipelineId, locationId: $('GHL - Config').item.json.locationId, name: `Cloud Phone — ${$json.client.companyName}`, status: 'open', contactId: $json.ghlContactId, monetaryValue: $json.pricing.totalIncGst } }}",
         "options": {}
       },
       "id": "ghl-create-opportunity",
@@ -586,7 +600,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { pipelineStageId: ($vars.GHL_PROPOSAL_SENT_STAGE_ID || $env.GHL_PROPOSAL_SENT_STAGE_ID) } }}",
+        "jsonBody": "={{ { pipelineStageId: $('GHL - Config').item.json.proposalSentStageId } }}",
         "options": {}
       },
       "id": "ghl-update-stage",
@@ -907,7 +921,7 @@
       "main": [
         [
           {
-            "node": "GHL - Search Contact by Phone",
+            "node": "GHL - Config",
             "type": "main",
             "index": 0
           }
@@ -918,7 +932,7 @@
       "main": [
         [
           {
-            "node": "GHL - Search Contact by Phone",
+            "node": "GHL - Config",
             "type": "main",
             "index": 0
           }
@@ -926,6 +940,17 @@
       ]
     },
     "Gmail - Send Quote Email": {
+      "main": [
+        [
+          {
+            "node": "GHL - Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL - Config": {
       "main": [
         [
           {
