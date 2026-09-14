@@ -255,7 +255,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, filters: [{ field: 'phone', operator: 'eq', value: $('Prepare Send').item.json.client.contactPhone }], pageLimit: 1 } }}",
+        "jsonBody": "={{ { locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), filters: [{ field: 'phone', operator: 'eq', value: $('Prepare Send').item.json.client.contactPhone }], pageLimit: 1 } }}",
         "options": {}
       },
       "id": "ghl-search-contact-by-phone",
@@ -332,7 +332,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, filters: [{ field: 'email', operator: 'eq', value: $json.client.contactEmail }], pageLimit: 1 } }}",
+        "jsonBody": "={{ { locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), filters: [{ field: 'email', operator: 'eq', value: $json.client.contactEmail }], pageLimit: 1 } }}",
         "options": {}
       },
       "id": "ghl-search-contact-by-email",
@@ -408,7 +408,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { locationId: $env.GHL_LOCATION_ID, email: $json.client.contactEmail, name: $json.client.contactName, companyName: $json.client.companyName, phone: $json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
+        "jsonBody": "={{ { locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), email: $json.client.contactEmail, name: $json.client.contactName, companyName: $json.client.companyName, phone: $json.client.contactPhone || undefined, source: 'Proposal Builder' } }}",
         "options": {}
       },
       "id": "ghl-create-contact",
@@ -468,7 +468,7 @@
           "parameters": [
             {
               "name": "locationId",
-              "value": "={{ $env.GHL_LOCATION_ID }}"
+              "value": "={{ ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID) }}"
             },
             {
               "name": "contactId",
@@ -476,7 +476,7 @@
             },
             {
               "name": "pipelineId",
-              "value": "={{ $env.GHL_PIPELINE_ID }}"
+              "value": "={{ ($vars.GHL_PIPELINE_ID || $env.GHL_PIPELINE_ID) }}"
             }
           ]
         },
@@ -555,7 +555,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { pipelineId: $env.GHL_PIPELINE_ID, locationId: $env.GHL_LOCATION_ID, name: `Cloud Phone — ${$json.client.companyName}`, status: 'open', contactId: $json.ghlContactId, monetaryValue: $json.pricing.totalIncGst } }}",
+        "jsonBody": "={{ { pipelineId: ($vars.GHL_PIPELINE_ID || $env.GHL_PIPELINE_ID), locationId: ($vars.GHL_LOCATION_ID || $env.GHL_LOCATION_ID), name: `Cloud Phone — ${$json.client.companyName}`, status: 'open', contactId: $json.ghlContactId, monetaryValue: $json.pricing.totalIncGst } }}",
         "options": {}
       },
       "id": "ghl-create-opportunity",
@@ -586,7 +586,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { pipelineStageId: $env.GHL_PROPOSAL_SENT_STAGE_ID } }}",
+        "jsonBody": "={{ { pipelineStageId: ($vars.GHL_PROPOSAL_SENT_STAGE_ID || $env.GHL_PROPOSAL_SENT_STAGE_ID) } }}",
         "options": {}
       },
       "id": "ghl-update-stage",
