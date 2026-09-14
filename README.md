@@ -106,7 +106,7 @@ nobody in between — that's the WYSIWYG guarantee).
 ## The actual n8n workflow
 
 `n8n/cloud-phone-proposal.workflow.json` — in n8n: **⋯ → Import from File**,
-or paste it straight onto the canvas. 28 nodes, two paths off one `If` node
+or paste it straight onto the canvas. 36 nodes, two paths off one `If` node
 keyed on `mode`:
 
 **Generate path** (`mode: "generate"`) — runs for every deal, standard or
@@ -178,14 +178,16 @@ was already approved:
 4. **Gmail - Send Branded Proposal (Fallback, HTML)** — the full `mergedHtml`
    as the email body instead, exactly like before PDF support existed. Only
    reached when `pdfOk` is false.
-5. **GHL - Upsert Contact → Extract Contact ID → Search Opportunity → Check
-   Opportunity Found? → Update Stage (Proposal Sent) → Add Note** — every
+5. **GHL - Config → Search Contact by Phone → (Search by Email → Create
+   Contact, if needed) → Contact Resolved → Search Opportunity → Create
+   Opportunity if needed → Update Stage (Proposal Sent) → Add Note** — every
    send (any format, standard or multi-site) syncs to GoHighLevel: the
-   client's contact is created or matched by email, their open opportunity
-   in the configured pipeline is found or created, its stage is set to
-   "Proposal Sent", and a note logs the deal total/term. `continueOnFail`
-   is ON for every one of these nodes — a GHL outage never blocks the
-   client's email from going out.
+   client's contact is matched **by phone first, then email, then created
+   new** if neither matches, their open opportunity in the configured
+   pipeline is found or created, its stage is set to "Proposal Sent", and a
+   note logs the deal total/term. `continueOnFail` is ON for every HTTP call
+   in this chain — a GHL outage never blocks the client's email from going
+   out.
 6. **Multi-Site — FYI Notify?** — if it was a multi-site deal, an FYI copy
    goes to the rep/BDM (`Gmail - Notify BDM (FYI, Sent)`) *after* the client
    already has their proposal — visibility, not a hand-off. Standard deals
@@ -208,12 +210,18 @@ was already approved:
   Token" with header name `Authorization` and value `Bearer <your GHL
   Private Integration Token>` (GHL → Settings → Private Integrations →
   Create new Integration, with Contacts + Opportunities read/write scopes),
-  then attach it to all 6 `GHL - *` HTTP Request nodes.
-- Set three environment variables on the n8n instance (or n8n Variables, if
-  your license has that): `GHL_LOCATION_ID`, `GHL_PIPELINE_ID`,
-  `GHL_PROPOSAL_SENT_STAGE_ID`. Find the pipeline/stage ids via GHL's own
+  then attach it to all 8 `GHL - *` HTTP Request nodes.
+- Open the **"GHL - Config"** Code node and edit its three placeholder
+  strings: `locationId`, `pipelineId`, `proposalSentStageId`. These live
+  inside the workflow on purpose (not an n8n env var or instance Variable) —
+  this portal may end up driving proposals into different pipelines, or even
+  a different GHL sub-account, per service line, so duplicating the whole
+  workflow and editing just this one node is how you point a copy at a
+  different pipeline/account. Find the ids via GHL's own
   ["Find Pipeline, Stage, and Opportunity IDs"](https://help.gohighlevel.com/support/solutions/articles/48001160284)
-  help article — no API call needed.
+  help article, or `GET /opportunities/pipelines` on the API — no need to
+  hardcode them into this repo, they're only ever pasted directly into the
+  node in your own n8n canvas.
 
 **GHL integration caveat**: the exact endpoints/field names were verified
 against GoHighLevel's live API v2 docs at build time, but this has not yet
