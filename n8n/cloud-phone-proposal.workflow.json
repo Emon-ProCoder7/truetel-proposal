@@ -195,7 +195,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const src = $('PDF Generated OK?').item.json;\nconst ok = !!($json && $json.id && Array.isArray($json.recipients) && $json.recipients[0]);\nconst signingUrl = ok ? $json.recipients[0].signing_url : null;\nreturn [{ json: { ...src, signWellOk: ok && !!signingUrl, signingUrl } }];"
+        "jsCode": "const src = $('PDF Generated OK?').item.json;\nconst bin = $('PDF Generated OK?').item.binary;\nconst ok = !!($json && $json.id && Array.isArray($json.recipients) && $json.recipients[0]);\nconst signingUrl = ok ? $json.recipients[0].signing_url : null;\nreturn [{ json: { ...src, signWellOk: ok && !!signingUrl, signingUrl }, binary: bin }];"
       },
       "id": "code-check-signwell-sent",
       "name": "Check SignWell Sent",
