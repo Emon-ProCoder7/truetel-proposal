@@ -106,7 +106,7 @@ nobody in between — that's the WYSIWYG guarantee).
 ## The actual n8n workflow
 
 `n8n/cloud-phone-proposal.workflow.json` — in n8n: **⋯ → Import from File**,
-or paste it straight onto the canvas. 36 nodes, two paths off one `If` node
+or paste it straight onto the canvas. 50 nodes, two paths off one `If` node
 keyed on `mode`:
 
 **Generate path** (`mode: "generate"`) — runs for every deal, standard or
@@ -172,12 +172,31 @@ was already approved:
    is deliberately ON: if the call fails or the free quota runs out, "Check
    PDF Result" sets `pdfOk: false` and the workflow falls back gracefully
    instead of breaking the send.
-3. **Gmail - Send Branded Proposal (PDF)** — short HTML body + the generated
-   PDF as a real attachment, ready for the client to print and sign. Only
-   reached when `pdfOk` is true.
-4. **Gmail - Send Branded Proposal (Fallback, HTML)** — the full `mergedHtml`
+3. **SignWell - Send for Signature → Check SignWell Sent → SignWell Sent
+   OK?** — real e-signature via [SignWell](https://www.signwell.com) (25 free
+   API documents/month, no card). The Formal Acceptance section's signature
+   lines already carry invisible SignWell text tags (1px, white-on-white —
+   see `.sig-tag` in the template CSS), so the exact same CustomJS-rendered
+   PDF becomes a live signing session with zero extra rendering. Only reached
+   when `pdfOk` is true. `continueOnFail` is ON here too.
+4. **Gmail - Send Branded Proposal (Sign Link)** — sent from TrueTel's own
+   Gmail, not SignWell — the client only ever sees a "Review & Sign" button.
+   Reached when SignWell sends successfully.
+5. **Gmail - Send Branded Proposal (PDF)** — the old Fill & Sign flow: short
+   HTML body + the PDF as a real attachment. Only reached if SignWell fails
+   or its quota is used up — a graceful step down, not a broken send.
+6. **Gmail - Send Branded Proposal (Fallback, HTML)** — the full `mergedHtml`
    as the email body instead, exactly like before PDF support existed. Only
-   reached when `pdfOk` is false.
+   reached when `pdfOk` is false (PDF generation itself failed).
+
+**Separate trigger — SignWell completion webhook** (`Webhook - SignWell
+Completed`, path `signwell-completed`, `responseMode: onReceived`): fires
+whenever SignWell finishes a signing session, independently of the portal.
+Downloads the completed PDF (SignWell bakes the IP-address/timestamp audit
+certificate into it automatically — no separate call needed), finds the
+matching GHL contact by the signer's email, uploads the signed PDF to GHL's
+Media Library, and adds a note linking it on the contact. Set this webhook's
+URL in SignWell under Settings → API → Webhooks, event "Document Completed".
 5. **GHL - Config → Search Contact by Phone → (Search by Email → Create
    Contact, if needed) → Contact Resolved → Search Opportunity → Create
    Opportunity if needed → Update Stage (Proposal Sent) → Add Note** — every
@@ -195,7 +214,7 @@ was already approved:
 7. **Respond - Sent** acks the portal.
 
 **Things to fill in after importing:**
-- Attach your **Gmail OAuth2 credential** to the four Gmail nodes.
+- Attach your **Gmail OAuth2 credential** to the five Gmail nodes.
 - Attach your **OpenAi credential** to the "OpenAI - Draft Narrative & Hero
   Stats" node (its Authentication field is already set to the right type).
 - Create a **Header Auth** credential (n8n → Credentials → New → Header
@@ -210,25 +229,43 @@ was already approved:
   Token" with header name `Authorization` and value `Bearer <your GHL
   Private Integration Token>` (GHL → Settings → Private Integrations →
   Create new Integration, with Contacts + Opportunities read/write scopes),
-  then attach it to all 8 `GHL - *` HTTP Request nodes.
+  then attach it to all 10 `GHL - *` HTTP Request nodes (7 in the main send
+  path, 3 in the SignWell-completion webhook).
+- Create a **Header Auth** credential named e.g. "SignWell API Key" with
+  header name `X-Api-Key` and your SignWell API key as the value, then
+  attach it to both "SignWell - Send for Signature" and "SignWell - Get
+  Completed PDF". Sign up free at [signwell.com](https://www.signwell.com)
+  — 25 free API documents/month, no card required.
 - Open the **"GHL - Config"** Code node and edit its three placeholder
-  strings: `locationId`, `pipelineId`, `proposalSentStageId`. These live
+  strings: `locationId`, `pipelineId`, `proposalSentStageId`. Also open
+  **"GHL - Config (Signature Webhook)"** (used by the separate SignWell
+  completion trigger) and edit its `locationId` the same way. These live
   inside the workflow on purpose (not an n8n env var or instance Variable) —
   this portal may end up driving proposals into different pipelines, or even
   a different GHL sub-account, per service line, so duplicating the whole
-  workflow and editing just this one node is how you point a copy at a
+  workflow and editing just these nodes is how you point a copy at a
   different pipeline/account. Find the ids via GHL's own
   ["Find Pipeline, Stage, and Opportunity IDs"](https://help.gohighlevel.com/support/solutions/articles/48001160284)
   help article, or `GET /opportunities/pipelines` on the API — no need to
   hardcode them into this repo, they're only ever pasted directly into the
   node in your own n8n canvas.
+- In SignWell, set the completion webhook URL (Settings → API → Webhooks,
+  event "Document Completed") to your n8n instance's
+  `.../webhook/signwell-completed` URL, so signed documents actually get
+  filed back into GHL.
 
-**GHL integration caveat**: the exact endpoints/field names were verified
-against GoHighLevel's live API v2 docs at build time, but this has not yet
-been run against a real GHL account end-to-end — treat the first real test
-send the way the PDF-generation nodes were treated (expect to fix one or two
-field-name/response-shape mismatches once you see real GHL responses, same
-as the "PDF Generated OK?" node needed two passes before it worked).
+**GHL integration status**: verified end-to-end against a real GHL account —
+contact create, opportunity create, and stage update to "Proposal Sent" all
+confirmed working via a live test execution.
+
+**SignWell integration caveat**: the exact endpoints/field shapes (text tag
+syntax, create-document body, completed-PDF retrieval) were verified against
+SignWell's live API docs at build time, but — unlike the GHL integration —
+this has **not yet been run against a real SignWell account**. Treat the
+first real test send the same way GHL's first test was treated: expect to
+fix one or two things (most likely spot: the exact shape of the
+`document.completed` webhook payload, which "Parse SignWell Webhook" reads
+defensively but couldn't be confirmed without a real webhook firing).
 
 No Notion writes happen anywhere in this workflow.
 
