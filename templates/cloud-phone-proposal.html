@@ -97,11 +97,14 @@
   .sig-grid > div { flex: 1; }
   .sig-line { border-bottom: 1px solid var(--msp-dark); height: 22px; margin-bottom: 4px; }
   .sig-label { font-size: 10px; text-transform: uppercase; color: var(--text-light); }
-  /* SignWell text tags: real text in the PDF's text layer (so its scanner finds
-     them) but rendered at 1px in white-on-white, so a human never sees literal
-     bracket syntax — the same PDF stays safe to attach directly if SignWell
-     is ever unreachable and the fallback path is used instead. */
-  .sig-tag { font-size: 1px; line-height: 1px; color: #ffffff; }
+  /* SignWell text tags: kept at NORMAL font size (not shrunk) because a live
+     test showed 1px text wasn't reliably embedded as real, extractable glyphs
+     by the PDF renderer — SignWell never found the tags at all. A zero-height,
+     overflow-hidden block still gets painted into the PDF's content stream
+     (so the tag text is genuinely present for SignWell's scanner to find) but
+     takes up no visible space and shows nothing to a human — same reasoning
+     as the standard "visually-hidden" accessibility pattern. */
+  .sig-tag { display: block; height: 0; overflow: hidden; font-size: 11px; color: var(--text-main); }
   .footer { padding: 24px 36px; text-align: center; font-size: 11px; color: var(--text-light); }
 </style>
 </head>
