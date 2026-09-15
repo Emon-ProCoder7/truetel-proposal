@@ -128,7 +128,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const src = $('Prepare Send').item.json;\nconst bin = $input.item.binary;\nconst pdfOk = !!(bin && bin.data);\n// CustomJS names the raw response after its own endpoint (\"html2pdf\") — give\n// the attachment a real filename before it reaches Gmail instead.\nconst companySlug = (src.client && src.client.companyName ? src.client.companyName : 'Proposal')\n  .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Proposal';\nconst fileName = `TrueTel-Cloud-Phone-Proposal-${companySlug}.pdf`;\nreturn [{\n  json: { ...src, pdfOk },\n  binary: pdfOk ? { data: { ...bin.data, fileName, fileExtension: 'pdf', mimeType: 'application/pdf' } } : undefined,\n}];"
+        "jsCode": "const src = $('Prepare Send').item.json;\nconst bin = $input.item.binary;\nconst pdfOk = !!(bin && bin.data);\n// CustomJS names the raw response after its own endpoint (\"html2pdf\") — give\n// the attachment a real filename before it reaches Gmail instead.\nconst companySlug = (src.client && src.client.companyName ? src.client.companyName : 'Proposal')\n  .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'Proposal';\nconst fileName = `TrueTel-Cloud-Phone-Proposal-${companySlug}.pdf`;\n// This n8n instance stores binary data on disk (\"filesystem\" mode), where\n// bin.data.data is not reliably the resolved base64 string — getBinaryDataBuffer\n// is the storage-mode-agnostic way to actually read it. SignWell needs a real\n// base64 string in its request body (not a binary property), so it's resolved\n// here once rather than trusting a raw expression later.\nconst pdfBase64 = pdfOk ? (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('base64') : null;\nreturn [{\n  json: { ...src, pdfOk, pdfBase64 },\n  binary: pdfOk ? { data: { ...bin.data, fileName, fileExtension: 'pdf', mimeType: 'application/pdf' } } : undefined,\n}];"
       },
       "id": "code-check-pdf-result",
       "name": "Check PDF Result",
@@ -179,7 +179,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { test_mode: false, name: `TrueTel Cloud Phone Proposal — ${$json.client.companyName}`, subject: 'Please review and sign your TrueTel Cloud Phone proposal', message: `Hi ${$json.client.contactName || 'there'}, please review and sign your proposal below.`, text_tags: true, draft: false, files: [{ name: 'proposal.pdf', file_base64: $binary.data.data }], recipients: [{ id: '1', name: $json.client.contactName || $json.client.companyName, email: $json.client.contactEmail }] } }}",
+        "jsonBody": "={{ { test_mode: false, name: `TrueTel Cloud Phone Proposal — ${$json.client.companyName}`, subject: 'Please review and sign your TrueTel Cloud Phone proposal', message: `Hi ${$json.client.contactName || 'there'}, please review and sign your proposal below.`, text_tags: true, draft: false, files: [{ name: 'proposal.pdf', file_base64: $json.pdfBase64 }], recipients: [{ id: '1', name: $json.client.contactName || $json.client.companyName, email: $json.client.contactEmail }] } }}",
         "options": {}
       },
       "id": "signwell-send",
@@ -195,7 +195,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const src = $('PDF Generated OK?').item.json;\nconst bin = $('PDF Generated OK?').item.binary;\nconst ok = !!($json && $json.id && Array.isArray($json.recipients) && $json.recipients[0]);\nconst signingUrl = ok ? $json.recipients[0].signing_url : null;\nreturn [{ json: { ...src, signWellOk: ok && !!signingUrl, signingUrl }, binary: bin }];"
+        "jsCode": "const { pdfBase64, ...src } = $('PDF Generated OK?').item.json; // drop the base64 blob now that SignWell's had it — no need to carry it through every downstream node's data\nconst bin = $('PDF Generated OK?').item.binary;\nconst ok = !!($json && $json.id && Array.isArray($json.recipients) && $json.recipients[0]);\nconst signingUrl = ok ? $json.recipients[0].signing_url : null;\nreturn [{ json: { ...src, signWellOk: ok && !!signingUrl, signingUrl }, binary: bin }];"
       },
       "id": "code-check-signwell-sent",
       "name": "Check SignWell Sent",
