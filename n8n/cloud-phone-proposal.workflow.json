@@ -924,7 +924,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || {};\nconst documentId = body.document_id || body.id || (body.data && body.data.id) || null;\nconst recipients = body.recipients || (body.data && body.data.recipients) || [];\nconst recipient = recipients[0] || {};\nconst eventType = body.event || body.event_type || (body.data && body.data.event) || null;\n// The webhook subscription was created with event_types: ['document_completed'],\n// but that filter's enforcement wasn't independently confirmed — check again\n// here rather than trust it blindly. SignWell fires document_sent and\n// document_viewed too; without this, an opened-but-unsigned email would file\n// a false \"signed\" note in GHL the moment the client just opens it.\nconst isCompleted = typeof eventType === 'string' && eventType.toLowerCase().includes('completed');\nreturn [{\n  json: {\n    documentId,\n    recipientEmail: recipient.email || body.email || null,\n    recipientName: recipient.name || null,\n    eventType,\n    isCompletedEvent: isCompleted,\n  },\n}];"
+        "jsCode": "const body = $json.body || {};\nconst eventType = (body.event && body.event.type) || null;\nconst obj = (body.data && body.data.object) || {};\nconst documentId = obj.id || null;\nconst recipients = obj.recipients || [];\nconst recipient = recipients.find((r) => r.status === 'completed') || recipients[0] || {};\nconst isCompleted = eventType === 'document_completed';\nreturn [{\n  json: {\n    documentId,\n    recipientEmail: recipient.email || null,\n    recipientName: recipient.name || null,\n    eventType,\n    isCompletedEvent: isCompleted,\n  },\n}];"
       },
       "id": "code-parse-signwell-webhook",
       "name": "Parse SignWell Webhook",
