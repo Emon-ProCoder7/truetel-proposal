@@ -920,11 +920,11 @@
         1700
       ],
       "webhookId": "signwell-completed",
-      "notes": "Set this URL as the webhook target in SignWell: Settings -> API -> Webhooks, event 'Document Completed'."
+      "notes": "SignWell has no dashboard page for this — the subscription was created directly via POST /api/v1/hooks with event_types: ['document_completed'] pointed at this URL. The 'Is Document Completed?' filter right after this one is a deliberate second check, in case that server-side event filter isn't actually enforced."
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || {};\nconst documentId = body.document_id || body.id || (body.data && body.data.id) || null;\nconst recipients = body.recipients || (body.data && body.data.recipients) || [];\nconst recipient = recipients[0] || {};\nreturn [{\n  json: {\n    documentId,\n    recipientEmail: recipient.email || body.email || null,\n    recipientName: recipient.name || null,\n  },\n}];"
+        "jsCode": "const body = $json.body || {};\nconst documentId = body.document_id || body.id || (body.data && body.data.id) || null;\nconst recipients = body.recipients || (body.data && body.data.recipients) || [];\nconst recipient = recipients[0] || {};\nconst eventType = body.event || body.event_type || (body.data && body.data.event) || null;\n// The webhook subscription was created with event_types: ['document_completed'],\n// but that filter's enforcement wasn't independently confirmed — check again\n// here rather than trust it blindly. SignWell fires document_sent and\n// document_viewed too; without this, an opened-but-unsigned email would file\n// a false \"signed\" note in GHL the moment the client just opens it.\nconst isCompleted = typeof eventType === 'string' && eventType.toLowerCase().includes('completed');\nreturn [{\n  json: {\n    documentId,\n    recipientEmail: recipient.email || body.email || null,\n    recipientName: recipient.name || null,\n    eventType,\n    isCompletedEvent: isCompleted,\n  },\n}];"
       },
       "id": "code-parse-signwell-webhook",
       "name": "Parse SignWell Webhook",
@@ -938,6 +938,38 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c-is-completed",
+              "leftValue": "={{ !!$json.isCompletedEvent }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-is-completed-event",
+      "name": "Is Document Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        420,
+        1700
+      ]
+    },
+    {
+      "parameters": {
         "jsCode": "return [{ json: {\n  locationId: \"PASTE_GHL_LOCATION_ID_HERE\", // same GHL sub-account as the main send path\n} }];"
       },
       "id": "code-ghl-config-signature",
@@ -945,8 +977,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        180,
-        1880
+        660,
+        1620
       ],
       "notes": "This trigger runs independently of the main send path, so it needs its own copy of locationId — edit this placeholder the same way as the main 'GHL - Config' node."
     },
@@ -1612,11 +1644,23 @@
       "main": [
         [
           {
-            "node": "GHL - Config (Signature Webhook)",
+            "node": "Is Document Completed?",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "Is Document Completed?": {
+      "main": [
+        [
+          {
+            "node": "GHL - Config (Signature Webhook)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     },
     "GHL - Config (Signature Webhook)": {
