@@ -97,6 +97,11 @@
   .sig-grid > div { flex: 1; }
   .sig-line { border-bottom: 1px solid var(--msp-dark); height: 22px; margin-bottom: 4px; }
   .sig-label { font-size: 10px; text-transform: uppercase; color: var(--text-light); }
+  /* SignWell text tags: real text in the PDF's text layer (so its scanner finds
+     them) but rendered at 1px in white-on-white, so a human never sees literal
+     bracket syntax — the same PDF stays safe to attach directly if SignWell
+     is ever unreachable and the fallback path is used instead. */
+  .sig-tag { font-size: 1px; line-height: 1px; color: #ffffff; }
   .footer { padding: 24px 36px; text-align: center; font-size: 11px; color: var(--text-light); }
 </style>
 </head>
@@ -261,24 +266,24 @@
     <div class='sig-box'>
       <h4>Client Authorisation</h4>
       <div class='sig-grid'>
-        <div><div class='sig-line'></div><span class='sig-label'>Full Name</span></div>
-        <div><div class='sig-line'></div><span class='sig-label'>Position / Title</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[text|1|y|Full Name]</span><span class='sig-label'>Full Name</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[text|1|n|Position]</span><span class='sig-label'>Position / Title</span></div>
       </div>
       <div class='sig-grid'>
-        <div><div class='sig-line'></div><span class='sig-label'>Signature</span></div>
-        <div><div class='sig-line'></div><span class='sig-label'>Date</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[s|1|y]</span><span class='sig-label'>Signature</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[d|1|y]</span><span class='sig-label'>Date</span></div>
       </div>
     </div>
     <div class='sig-box'>
       <h4>Direct Debit Request</h4>
       <p style='font-size:10.5px; margin-bottom:12px;'>I/We authorise TrueTel Solutions (or its designated payment processor) to debit the account identified below through the Bulk Electronic Clearing System (BECS) for any amounts due under this agreement.</p>
       <div class='sig-grid'>
-        <div><div class='sig-line'></div><span class='sig-label'>Account Name</span></div>
-        <div><div class='sig-line'></div><span class='sig-label'>BSB &amp; Account Number</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[text|1|y|Account Name]</span><span class='sig-label'>Account Name</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[text|1|y|BSB and Account Number]</span><span class='sig-label'>BSB &amp; Account Number</span></div>
       </div>
       <div class='sig-grid'>
-        <div><div class='sig-line'></div><span class='sig-label'>Account Holder Signature</span></div>
-        <div><div class='sig-line'></div><span class='sig-label'>Date</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[s|1|y]</span><span class='sig-label'>Account Holder Signature</span></div>
+        <div><div class='sig-line'></div><span class='sig-tag'>[d|1|y]</span><span class='sig-label'>Date</span></div>
       </div>
     </div>
     <p style='text-align:center; margin-top:16px;'>Please sign and return to <strong>__PREPARED_BY_EMAIL__</strong> or reply directly to this email to confirm by return correspondence.</p>
